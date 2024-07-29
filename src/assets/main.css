@@ -193,9 +193,23 @@ body {
     }
 
     /*contact.vue*/
-    .form_input{
+    #contact{
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+     
 
-    } 
+      #contact_form{
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+      }
+    }
     
     .required::after{
       content: "\002A";

@@ -18,6 +18,9 @@ function switchApp(app) {
     case 'contact':
       appInstance = createApp(App2).mount('#app');
       break;
+    case 'home':
+      appInstance = createApp(App).mount('#app');
+      break;
     default:
       appInstance = createApp(App).mount('#app');
       break;
@@ -27,6 +30,10 @@ function switchApp(app) {
 // Event-Listener hinzufügen
 window.addEventListener("contact", function() {
   switchApp('contact');
+});
+
+window.addEventListener("home", function() {
+  switchApp('home');
 });
 
 export { switchApp };
