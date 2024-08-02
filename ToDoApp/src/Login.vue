@@ -1,13 +1,18 @@
 <template>
-    <div id="login">
+    <div id="holder">
+        <h1 style="color: red;">Site under construction :)</h1>
+        <div id="login">
         Login <label class="switch">
             <input type="checkbox" id="reg_log">
             <span class="slider round" @click="toggleLogOrReg"></span>
         </label> Registrieren
         <Log v-if="LoginOrRegister.Log" @login="handleLogin($event)" />
         <Reg v-if="LoginOrRegister.Reg" @registry="handleRegistry"/>
+        <br>
         <Guest @skip-local="SkipToLocal"/>
+        </div>
     </div>
+    
 </template>
 
 <script>

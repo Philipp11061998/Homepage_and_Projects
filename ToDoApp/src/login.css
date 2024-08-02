@@ -1,4 +1,22 @@
- /* The switch - the box around the slider */
+
+#holder{
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+#login{
+  padding: 4rem;
+  -webkit-box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54); 
+  box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54);
+  border-radius: 1rem;
+}
+
+
+/* The switch - the box around the slider */
  .switch {
     position: relative;
     display: inline-block;
