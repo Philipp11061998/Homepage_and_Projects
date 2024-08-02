@@ -4,11 +4,14 @@
         <br>
         <input type="text" name="username" id="username" required>
         <br>
+        <br>
         <label for="password">Passwort:</label>
         <br>
-        <input type="password" name="password" id="password" required>
+        <input type="password" name="password" id="password_Reg" required 
+        pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}">
         <br>
-        <input type="submit" value="Registrieren">
+        <br>
+        <input type="submit" value="Registrieren" id="submit_Reg_Log">
         </form>
 </template>
 

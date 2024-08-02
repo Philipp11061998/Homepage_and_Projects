@@ -1,5 +1,5 @@
 <template>
-    <a href="#"><input type="button" value="Als Gast fortfahren " @click="SkipToTasks"></a>
+    <input type="button" value="Als Gast fortfahren &rarr;" @click="SkipToTasks" id="logAsGuest">
 </template>
 
 <script>

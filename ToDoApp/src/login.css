@@ -9,12 +9,59 @@
 }
 
 #login{
-  padding: 4rem;
+  padding: 3rem;
+  padding-bottom: 1rem;
   -webkit-box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54); 
   box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54);
   border-radius: 1rem;
+  font-size: 1.2rem;
 }
 
+#username,
+#password,
+#password_Reg{
+  border-radius: 1rem;
+  padding: .6rem;
+  width: 90%;
+}
+
+#password_Reg:invalid{
+  border-color: red;
+}
+
+#password_Reg:valid{
+  border-color: green;
+}
+
+input[type="submit"],
+#logAsGuest{
+  padding: .7rem;
+  border-radius: 1rem;
+  background-color: white;
+  font-size: 1.1rem;
+}
+
+#logAsGuest{
+  font-size: .8rem;
+  padding: .5rem;
+  margin-left: 50%;
+  margin-bottom: 0;
+}
+
+#submit_Reg_Log:hover{
+  cursor: pointer !important;
+  background-color: grey !important;
+}
+
+#switch{
+  padding: .7rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: .7rem;
+  background-color: white;
+  border-radius: 1rem;
+}
 
 /* The switch - the box around the slider */
  .switch {
@@ -39,7 +86,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: lightgray;
+    background-color: rgb(238, 217, 217);
     -webkit-transition: .4s;
     transition: .4s;
   }

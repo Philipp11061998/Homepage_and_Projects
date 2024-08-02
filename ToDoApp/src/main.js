@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Hier können weitere Aktionen ausgeführt werden, z.B. Anwendung neu laden oder anzeigen
         loginApp.unmount(); // Entladen der aktuellen Vue-Anwendung
+        $('#login').remove();
         app.mount('#app'); // Neu laden der Vue-Anwendung
         document.getElementById('holder').style.display = "block"; // Einblenden eines bestimmten Elements
         startTasksApp(); // Starten einer anderen Funktion oder Anwendungsteil
@@ -30,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         // Hier können weitere Aktionen ausgeführt werden, z.B. Anwendung neu laden oder anzeigen
         loginApp.unmount(); // Entladen der aktuellen Vue-Anwendung
+        $('#login').remove();
         app.mount('#app'); // Neu laden der Vue-Anwendung
         document.getElementById('holder').style.display = "block"; // Einblenden eines bestimmten Elements
         startTasksApp(); // Starten einer anderen Funktion oder Anwendungsteil
@@ -43,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const app2 = createApp(SecondApp);
         // Hier können weitere Aktionen ausgeführt werden, z.B. Anwendung neu laden oder anzeigen
         loginApp.unmount(); // Entladen der aktuellen Vue-Anwendung
+        $('#login').remove();
         app2.mount('#app'); // Neu laden der Vue-Anwendung
         document.getElementById('holder').style.display = "block"; // Einblenden eines bestimmten Elements
         startTasksApp(); // Starten einer anderen Funktion oder Anwendungsteil
