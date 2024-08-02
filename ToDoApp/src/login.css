@@ -1,3 +1,6 @@
+body{
+  background-color: white;
+}
 
 #holder{
   display: flex;
@@ -8,14 +11,16 @@
   margin: 0;
 }
 
-#login{
+#login_Form{
   padding: 3rem;
   padding-bottom: 1rem;
   -webkit-box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54); 
   box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54);
   border-radius: 1rem;
   font-size: 1.2rem;
+  background-color: lightgray !important;
 }
+
 
 #username,
 #password,
@@ -23,6 +28,9 @@
   border-radius: 1rem;
   padding: .6rem;
   width: 90%;
+  margin-top: .3rem;
+  -webkit-box-shadow: 5px 6px 15px 5px rgba(108, 108, 108, 0.54); 
+  box-shadow: 5px 6px 15px 5px rgba(108, 108, 108, 0.54);
 }
 
 #password_Reg:invalid{
@@ -33,12 +41,63 @@
   border-color: green;
 }
 
+#tooltip_Password{
+  margin-left: .5rem;
+}
+
+.tooltip{
+  position: relative;
+  background: rgba(0,0,0,0.3);
+  padding: 1px 7px;
+  border-radius: 100%;
+  font-size: 20px;
+  cursor: help;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.tooltip::before, .tooltip::after{
+  position: absolute;
+  left: 50%;
+  opacity: 0;
+  transition: all ease 0.3s;
+}
+
+.tooltip::before{
+  content: "";
+  border-width: 10px 8px 0 8px;
+  border-style: solid;
+  border-color: rgba(0,0,0,0.3) transparent transparent transparent;
+  top: -20px;
+  margin-left: -8px;
+}
+
+.tooltip::after{
+  content: attr(data-tooltip);
+  background: rgb(0, 0, 0);
+  top: -20px;
+  transform: translateY(-100%);
+  font-size: 14px;
+  margin-left: -150px;
+  width: 300px;
+  border-radius: 10px;
+  color: #eee;
+  padding: 14px;
+}
+
+/* Hover states */
+
+.tooltip:hover::before, .tooltip:hover::after{
+  opacity: 1;
+}
+
 input[type="submit"],
 #logAsGuest{
   padding: .7rem;
   border-radius: 1rem;
   background-color: white;
   font-size: 1.1rem;
+  -webkit-box-shadow: 5px 6px 15px 5px rgba(108, 108, 108, 0.54); 
+  box-shadow: 5px 6px 15px 5px rgba(108, 108, 108, 0.54);
 }
 
 #logAsGuest{
@@ -61,6 +120,8 @@ input[type="submit"],
   gap: .7rem;
   background-color: white;
   border-radius: 1rem;
+  -webkit-box-shadow: 5px 6px 15px 5px rgba(108, 108, 108, 0.54); 
+  box-shadow: 5px 6px 15px 5px rgba(108, 108, 108, 0.54);
 }
 
 /* The switch - the box around the slider */
@@ -86,7 +147,7 @@ input[type="submit"],
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgb(238, 217, 217);
+    background-color: rgb(192, 217, 233);
     -webkit-transition: .4s;
     transition: .4s;
   }

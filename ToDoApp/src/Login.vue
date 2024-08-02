@@ -1,7 +1,7 @@
 <template>
     <div id="holder">
         <h1 style="color: red;">Site under construction :)</h1>
-        <div id="login">
+        <div id="login_Form">
             <div id="switch">
                 Login <label class="switch">
                 <input type="checkbox" id="reg_log">

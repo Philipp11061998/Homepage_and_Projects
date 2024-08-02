@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="handleLogin">
+    <form @submit.prevent="handleLogin" autocomplete="off" >
         <label for="username">Username:</label>
         <br>
         <input type="text" name="username" id="username" required>
