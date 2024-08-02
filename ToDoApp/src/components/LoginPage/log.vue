@@ -10,8 +10,9 @@
         <input type="password" name="password" id="password" required>
         <br>
         <br>
-        <input type="submit" value="Anmelden" id="submit_Reg_Log">
-    </form>
+        <div id="reg_Log_Row">
+            <input type="submit" value="Anmelden" id="submit_Reg_Log">
+        </div>    </form>
 </template>
 
 <script>

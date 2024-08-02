@@ -11,7 +11,9 @@
         pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}">
         <br>
         <br>
-        <input type="submit" value="Registrieren" id="submit_Reg_Log">
+        <div id="reg_Log_Row">
+            <input type="submit" value="Registrieren" id="submit_Reg_Log">
+        </div>
         </form>
 </template>
 
