@@ -6,7 +6,7 @@
     <main>
       <section id="aboutMe">
         <p class="meText">
-          <img id="me" class="img-fluid" src="/public/ich.png" alt="It's me :)">
+          <div class="img_Holder"><img id="me" class="img-fluid" src="/public/ich.png" alt="It's me :)"></div>
           <span class="headerMe">Wer bin ich: <br></span>Mein Name ist Philipp Kraut. Ich bin ein junger, dem Coden verfallener Mann, welcher sich in den Tiefen von JavaScript verloren hat.
           <br>
           <br>
