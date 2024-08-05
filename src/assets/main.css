@@ -255,6 +255,11 @@ body {
           padding: .5rem;
         }
 
+        #message{
+          -webkit-box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54); 
+          box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54);
+        }
+
         label{
           padding: .5rem;
         }
@@ -266,12 +271,32 @@ body {
           max-width: 100%;
         }
 
+        .form_input{
+          -webkit-box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54); 
+          box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54);
+        }
+
         .submit_Row{
           width: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
           margin-top: 1.2rem;
+        }
+
+        #submit_Contact{
+          -webkit-box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54); 
+          box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54);
+        }
+
+        #success{
+          text-align: center;
+          margin-top: .7rem;
+          margin-bottom: -1rem;
+          color: green;
+          font-weight: bold;
+          font-size: .9rem;
+          font-style: italic;
         }
       }
     }

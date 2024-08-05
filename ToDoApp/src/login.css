@@ -9,6 +9,7 @@ body{
   align-items: center;
   justify-content: center;
   margin: 0;
+  background-color: white;
 }
 
 #login_Form{
@@ -119,7 +120,13 @@ input[type="submit"],
   background-color: grey !important;
 }
 
+#logAsGuest:hover{
+  cursor: pointer !important;
+  background-color: grey !important;
+}
+
 #switch{
+  cursor: default;
   padding: .7rem;
   display: flex;
   justify-content: center;

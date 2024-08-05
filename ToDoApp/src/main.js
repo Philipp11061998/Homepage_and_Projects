@@ -16,6 +16,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loginApp.mount("#login");
 
+    //Wird bei aktivem Login ausgeführt (wenn User auf einloggen klickt). Siehe Server
+    //für auto Login über localStorage
     window.addEventListener('login', (event) => {
         // PHP sende LoginDaten an Server und warte Antwort ab muss hier hin
         const { username, password } = event.detail;
@@ -48,10 +50,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("FirstHeader").innerHTML = headerToDos + localStorage.getItem('username');
     });
 
+
+    //Auto Login über Local Storage
     window.addEventListener('server', () => {
-        if (localStorage.getItem("login") === "server") {
-            localStorage.setItem('login', 'server'); // Login-Status aktualisieren
-        }
 
         loginApp.unmount(); // Entladen der aktuellen Vue-Anwendung
         app2.mount('#app'); // Neu laden der Vue-Anwendung

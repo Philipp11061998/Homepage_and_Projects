@@ -5,7 +5,7 @@
       </div>
       <main>
         <div id="contact">
-            <form action="contact.php" method="POST" id="contact_form">
+            <form id="contact_form" @submit.prevent="send_Data">
               <div class="form_Row">
                 <label for="name" class="labelBefor"><span class="required">Name:</span></label>
                 <input class="form_input" type="text" name="name" id="name" required>
@@ -21,6 +21,7 @@
               <div class="submit_Row">
                 <input type="submit" value="Absenden" id="submit_Contact">
               </div>
+              <div id="success"></div>
             </form>
         </div>
       </main>
@@ -36,6 +37,12 @@
   export default {
       components: {
           Nav
+      },
+      methods: {
+        send_Data(){
+            const send = new CustomEvent('send_Contact', {});
+            window.dispatchEvent(send);
+        }
       }
     }
 </script>
