@@ -1,4 +1,8 @@
 <template>
+    <nav>
+        <button id="profile" class="add nav_button" @click="notCoded">Profil</button>
+        <button id="logout" class="add nav_button" @click="logout">Logout</button>
+    </nav>
     <div>
         <label id="new"><span @mousedown.prevent>Neue Aufgabe hinzufügen:</span>
             <newT @add-task="handleAddTask"/>
@@ -112,7 +116,14 @@ export default {
             }
 
             localStorage.setItem("task", JSON.stringify(this.tasks));
-
+        },
+        logout(){
+            const logout = new CustomEvent('logout', {});
+            localStorage.setItem('login', '');
+            window.dispatchEvent(logout);
+        },
+        notCoded(){
+            alert("Funktion noch nicht eingebunden.")
         }
     },
     computed: {

@@ -20,11 +20,15 @@ body{
 }
 
 #app{
-    padding-top: 1.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-direction: row;
+    flex-direction: column;
+}
+
+nav{
+    width: 100vw;
+    margin-top: 0 !important;
 }
 
 #new_task{
@@ -34,10 +38,19 @@ body{
 }
 
 .add{
-    margin-top: 1.8rem !important;
-    margin-bottom: 1rem !important;
     -webkit-box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54); 
     box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54);
+}
+
+.nav_button{
+    margin-bottom: .7rem;
+    margin-right: 1rem;
+    margin-left: 1rem;
+}
+
+#add_Task{
+    margin-top: 1.8rem !important;
+    margin-bottom: 1rem !important;
 }
 
 #FirstHeader{
