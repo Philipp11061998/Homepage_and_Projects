@@ -1,6 +1,6 @@
 body{
     background-color: lightgray !important;
-    font-size: 22px;
+    font-size: 1.3rem;
     margin: 0 auto;
     width: 100vw;   
     height: 100vh;     
@@ -30,6 +30,7 @@ body{
 #new_task{
     -webkit-box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54); 
     box-shadow: 5px 6px 15px 5px rgba(0,0,0,0.54);
+    font-size: 1.2rem;
 }
 
 .add{
