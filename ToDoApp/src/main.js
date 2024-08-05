@@ -6,6 +6,7 @@ import Login from './Login.vue';
 document.addEventListener("DOMContentLoaded", () => {
     const loginApp = createApp(Login);
     const app = createApp(App);
+    let headerToDos = document.getElementById("FirstHeader").innerHTML;
 
     loginApp.mount("#login");
 
@@ -20,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
         app.mount('#app'); // Neu laden der Vue-Anwendung
         document.getElementById('holder').style.display = "block"; // Einblenden eines bestimmten Elements
         startTasksApp(); // Starten einer anderen Funktion oder Anwendungsteil
+        document.getElementById("FirstHeader").innerHTML = headerToDos + localStorage.getItem('username');
     });
 
     window.addEventListener('local', () => {
@@ -28,6 +30,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // Hier wird der Login-Status aktualisiert, falls nicht bereits gesetzt
         if (!localStorage.getItem("login")) {
             localStorage.setItem('login', 'local');
+            localStorage.setItem('username', 'Gast');
+            document.getElementById("FirstHeader").innerHTML = headerToDos + " Gast";
         }
         // Hier können weitere Aktionen ausgeführt werden, z.B. Anwendung neu laden oder anzeigen
         loginApp.unmount(); // Entladen der aktuellen Vue-Anwendung
@@ -35,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
         app.mount('#app'); // Neu laden der Vue-Anwendung
         document.getElementById('holder').style.display = "block"; // Einblenden eines bestimmten Elements
         startTasksApp(); // Starten einer anderen Funktion oder Anwendungsteil
+        document.getElementById("FirstHeader").innerHTML = headerToDos + localStorage.getItem('username');
     });
     
     window.addEventListener('server', () =>{
@@ -49,6 +54,8 @@ document.addEventListener("DOMContentLoaded", () => {
         app2.mount('#app'); // Neu laden der Vue-Anwendung
         document.getElementById('holder').style.display = "block"; // Einblenden eines bestimmten Elements
         startTasksApp(); // Starten einer anderen Funktion oder Anwendungsteil
+        document.getElementById("FirstHeader").innerHTML = headerToDos + localStorage.getItem('username');
+
     });
 
     function startTasksApp(){
