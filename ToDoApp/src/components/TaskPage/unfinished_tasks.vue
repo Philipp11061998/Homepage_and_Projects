@@ -1,9 +1,10 @@
 <template>
     <ul id="unfinished">
-        <li v-for="(task, index) in tasks" :key="task.beschreibung">
-            <p class="task">{{ task.beschreibung }}
-                <button class="erledigtWechseln" @click="erledigtWechseln(index)">&#10003;</button>
-                <button class="loeschen" @click="loeschen(index)">X</button>
+        <li v-for="task in tasks" :key="task.id">
+            <p class="task">
+                {{ task.beschreibung }}
+                <button class="erledigtWechseln" @click="erledigtWechseln(task.id)">&#10003;</button>
+                <button class="loeschen" @click="loeschen(task.id)">X</button>
             </p>
         </li>
     </ul>
@@ -13,11 +14,11 @@
 export default {
     props: ['tasks'],
     methods: {
-        loeschen(index) {
-            this.$emit('delete-task', 'unfinished', index);
+        loeschen(taskId) {
+            this.$emit('delete-task', taskId);
         },
-        erledigtWechseln(index) {
-            this.$emit('toggle-task-status', 'unfinished', index);
+        erledigtWechseln(taskId) {
+            this.$emit('toggle-task-status', taskId);
         }
     }
 };

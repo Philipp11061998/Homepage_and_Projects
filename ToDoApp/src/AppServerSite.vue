@@ -4,7 +4,8 @@
         <button id="logout" class="add nav_button" @click="logout">Logout</button>
     </nav>
     <div>
-        <label id="new"><span @mousedown.prevent>Neue Aufgabe hinzufügen:</span>
+        <label id="new">
+            <span @mousedown.prevent>Neue Aufgabe hinzufügen:</span>
             <newT @add-task="handleAddTask"/>
         </label>
         <div id="holder_tasks">
@@ -12,14 +13,14 @@
             <unfinished-tasks :tasks="nichterledigt" @delete-task="handleDeleteTask" @toggle-task-status="handleToggleTaskStatus"/>
 
             <hr>
-            
+
             <h2 @mousedown.prevent @click="toggleTasks('finished')">Erledigte Aufgaben ({{ erledigt.length }})</h2>
             <finished-tasks :tasks="erledigt" @delete-task="handleDeleteTask" @toggle-task-status="handleToggleTaskStatus"/>
 
             <hr>
 
             <h2 @mousedown.prevent @click="toggleTasks('all')">Alle Aufgaben ({{ tasks.length }})</h2>
-            <allTasks :tasks="tasks"/>
+            <all-tasks :tasks="tasks"/>
         </div>
     </div>
 </template>
@@ -28,8 +29,7 @@
 import NewTask from "./components/TaskPage/newTask.vue";
 import FinishedTasks from "./components/TaskPage/finished_tasks.vue";
 import UnfinishedTasks from "./components/TaskPage/unfinished_tasks.vue";
-import AllTasks from "./components/TaskPage/all_tasks.vue"
-
+import AllTasks from "./components/TaskPage/all_tasks.vue";
 
 export default {
     components: {
@@ -62,64 +62,9 @@ export default {
             }
         }
 
-        const userId = localStorage.getItem('user_id');
-        const username = localStorage.getItem('username');
-    
-        if (!userId || !username) {
-            console.error('Benutzer-ID oder Benutzername fehlt');
-            return;
-        }
-    
-        fetch(`https://philippk.name/ToDoApp/tasks.php?user_id=${userId}&username=${encodeURIComponent(username)}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP-Fehler! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (Array.isArray(data)) {
-                if (data.length === 0) {
-                    console.log('Keine Tasks vorhanden');
-                } else {
-                    // Aufgaben im LocalStorage speichern
-                    localStorage.setItem('tasks', JSON.stringify(data));
-                    
-                    // Tasks in this.tasks pushen
-                    this.tasks = data;  // Aktualisiert `this.tasks` mit den erhaltenen Daten
-                }
-            } else if (data.error) {
-                console.error('Fehler:', data.error);
-            }
-        })
-        .catch(error => console.error('Fehler:', error));
+        this.refreshTasks();
     },
     methods: {
-        handleAddTask(taskDescription) {
-            const userId = localStorage.getItem('user_id');
-            if (!userId) {
-                console.error('Benutzer-ID fehlt');
-                return;
-            }
-
-            // Erstellen eines Task-Objekts
-            const task = {
-                beschreibung: taskDescription,
-                fertig: false, // Neue Aufgaben sind standardmäßig nicht fertig
-                user_id: userId
-            };
-
-            // Hinzufügen des neuen Tasks zum Aufgaben-Array
-            this.tasks.push(task);
-
-            // Aufgaben an den Server senden
-            this.sendTasksToServer(userId, this.tasks);
-        },
         FinOrUnfinTaskToggle(){
             localStorage.setItem("task", JSON.stringify(this.tasks));
         },
@@ -136,72 +81,157 @@ export default {
                 localStorage.setItem("visibility", JSON.stringify(this.visibility));
             }
         },
-        handleDeleteTask(array, index) {
-            if (array === "unfinished") {
-                const taskIndex = this.tasks.findIndex(task => !task.fertig && task.beschreibung === this.nichterledigt[index].beschreibung);
-                if (taskIndex > -1) {
-                    this.tasks.splice(taskIndex, 1);
-                }
-            } else if (array === "finished") {
-                const taskIndex = this.tasks.findIndex(task => task.fertig && task.beschreibung === this.erledigt[index].beschreibung);
-                if (taskIndex > -1) {
-                    this.tasks.splice(taskIndex, 1);
-                }
-            }
-            localStorage.setItem("task", JSON.stringify(this.tasks));
-        },
-        handleToggleTaskStatus(array, index) {
-            if (array === "unfinished") {
-                const taskIndex = this.tasks.findIndex(task => !task.fertig && task.beschreibung === this.nichterledigt[index].beschreibung);
-                if (taskIndex > -1) {
-                    this.tasks[taskIndex].fertig = !this.tasks[taskIndex].fertig
-                }
-            } else if (array === "finished") {
-                const taskIndex = this.tasks.findIndex(task => task.fertig && task.beschreibung === this.erledigt[index].beschreibung);
-                if (taskIndex > -1) {
-                    this.tasks[taskIndex].fertig = !this.tasks[taskIndex].fertig
-                }
-            }
-
-            const userId = localStorage.getItem('user_id');
-            this.sendTasksToServer(userId, this.tasks);
-
-        },
         logout(){
             const logout = new CustomEvent('logout', {});
             localStorage.setItem('login', '');
+            localStorage.removeItem('tasks', '');
+            localStorage.removeItem('user_id', '');
+            localStorage.removeItem('username', '');
+            localStorage.removeItem('visibility', '');
             window.dispatchEvent(logout);
         },
         notCoded(){
             alert("Funktion noch nicht eingebunden.")
         },
-        async sendTasksToServer(userId, tasks) {
-        // Überprüfen, ob die Aufgaben im richtigen Format vorliegen
-        const formattedTasks = tasks.map(task => ({
-            beschreibung: task.beschreibung,
-            fertig: task.fertig,
-            user_id: task.user_id
-        }));
+        handleAddTask(newTaskDescription) {
+            const newTask = {
+                beschreibung: newTaskDescription,
+                fertig: false, // Standardmäßig nicht fertig
+                user_id: localStorage.getItem('user_id')
+            };
+            
+            // Füge die neue Aufgabe zu den lokalen Aufgaben hinzu
+            this.tasks.push(newTask); 
+            
+            // Update local storage
+            localStorage.setItem('tasks', JSON.stringify(this.tasks));
+            
+            // Speichere nur die neue Aufgabe auf dem Server
+            this.saveTask(newTask);
+        },
+        async saveTask(task) {
+            const userId = localStorage.getItem('user_id');
+            if (!userId) {
+                console.error('Benutzer-ID fehlt');
+                return;
+            }
 
-        try {
-            const response = await fetch('https://philippk.name/ToDoApp/save_tasks.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ user_id: userId, tasks: formattedTasks })
-            });
-            const data = await response.json();
+            try {
+                const response = await fetch('https://philippk.name/ToDoApp/save_tasks.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: userId, tasks: [task] })
+                });
+                const data = await response.json();
 
-            if (data.success) {
-                console.log('Tasks erfolgreich gespeichert');
-
-                const username = localStorage.getItem('username');
-                if (!userId || !username) {
-                    console.error('Benutzer-ID oder Benutzername fehlt');
-                    return;
+                if (data.success) {
+                    console.log('Task erfolgreich gespeichert');
+                    this.refreshTasks();
+                } else {
+                    console.error('Fehler beim Speichern der Task:', data.error);
                 }
+            } catch (error) {
+                console.error('Fehler:', error);
+            }
+        },
+        async handleDeleteTask(taskId) {
+            const userId = localStorage.getItem('user_id');
+            if (!userId) {
+                console.error('Benutzer-ID fehlt');
+                return;
+            }
 
+            // Entferne die Aufgabe aus dem lokalen Array
+            this.tasks = this.tasks.filter(task => task.id !== taskId);
+            localStorage.setItem('tasks', JSON.stringify(this.tasks));
+
+            try {
+                const response = await fetch('https://philippk.name/ToDoApp/delete_tasks.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        tasks: [
+                            {
+                                id: taskId,
+                                beschreibung: "", // Falls erforderlich
+                                fertig: false // Falls erforderlich
+                            }
+                        ]
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('Task erfolgreich gelöscht');
+                } else {
+                    console.error('Fehler beim Löschen der Task:', data.error);
+                }
+            } catch (error) {
+                console.error('Fehler:', error);
+            }
+        },
+        async handleToggleTaskStatus(taskId) {
+            const userId = localStorage.getItem('user_id');
+            if (!userId) {
+                console.error('Benutzer-ID fehlt');
+                return;
+            }
+
+            // Finde die Aufgabe und toggle den Status
+            const task = this.tasks.find(t => t.id === taskId);
+            if (task) {
+                task.fertig = !task.fertig;
+                this.handleUpdateTask(task);
+            }
+        },
+        async handleUpdateTask(task) {
+            const userId = localStorage.getItem('user_id');
+            if (!userId) {
+                console.error('Benutzer-ID fehlt');
+                return;
+            }
+
+            // Aktualisiere die Aufgabe im lokalen Array
+            const taskIndex = this.tasks.findIndex(t => t.id === task.id);
+            if (taskIndex !== -1) {
+                this.tasks[taskIndex] = task;
+                localStorage.setItem('tasks', JSON.stringify(this.tasks));
+            }
+
+            try {
+                const response = await fetch('https://philippk.name/ToDoApp/update_tasks.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: userId, tasks: [task] })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('Task erfolgreich aktualisiert');
+                } else {
+                    console.error('Fehler beim Aktualisieren der Task:', data.error);
+                }
+            } catch (error) {
+                console.error('Fehler:', error);
+            }
+        },
+        async refreshTasks() {
+            const userId = localStorage.getItem('user_id');
+            const username = localStorage.getItem('username');
+
+            if (!userId || !username) {
+                console.error('Benutzer-ID oder Benutzername fehlt');
+                return;
+            }
+
+            try {
                 const tasksResponse = await fetch(`https://philippk.name/ToDoApp/tasks.php?user_id=${userId}&username=${encodeURIComponent(username)}`, {
                     method: 'GET',
                     headers: {
@@ -216,13 +246,10 @@ export default {
                 } else {
                     console.error('Fehler beim Abrufen der Aufgaben:', tasksData.error);
                 }
-            } else {
-                console.error('Fehler beim Speichern der Tasks:', data.error);
+            } catch (error) {
+                console.error('Fehler:', error);
             }
-        } catch (error) {
-            console.error('Fehler:', error);
         }
-    },
     },
     computed: {
         nichterledigt() {
@@ -230,11 +257,11 @@ export default {
         },
         erledigt() {
             return this.tasks.filter(task => task.fertig);
-        },
-    },
-
+        }
+    }
 };
 </script>
+
 
 <style scoped>
     h2 {

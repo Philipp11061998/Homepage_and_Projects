@@ -1,9 +1,10 @@
 <template>
     <ul id="finished">
-        <li v-for="(task, index) in tasks" :key="task.beschreibung">
-            <p class="task"><span class="NurTextLineThrough">{{task.beschreibung}}</span>
-                <button class="erledigtWechseln" @click="erledigtWechseln(index)">&#10003;</button>
-                <button class="loeschen" @click="loeschen(index)">X</button>
+        <li v-for="task in tasks" :key="task.id">
+            <p class="task">
+                <span class="NurTextLineThrough">{{ task.beschreibung }}</span>
+                <button class="erledigtWechseln" @click="erledigtWechseln(task.id)">&#10003;</button>
+                <button class="loeschen" @click="loeschen(task.id)">X</button>
             </p>
         </li>
     </ul>
@@ -13,21 +14,19 @@
 export default {
     props: ['tasks'],
     methods: {
-        loeschen(index) {
-            this.$emit('delete-task', 'finished', index);
+        loeschen(taskId) {
+            this.$emit('delete-task', taskId);
         },
-        erledigtWechseln(index) {
-            this.$emit('toggle-task-status', 'finished', index);
+        erledigtWechseln(taskId) {
+            this.$emit('toggle-task-status', taskId);
         }
     }
 };
 </script>
 
 <style>
-    .NurTextLineThrough
-    {   
+    .NurTextLineThrough {
         color: red;
-        text-decoration: line-through
+        text-decoration: line-through;
     }
-
 </style>

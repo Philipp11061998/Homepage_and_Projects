@@ -1,6 +1,6 @@
 <template>
     <ul id="all">
-        <li v-for="(task, index) in tasks" :key="index" :class="{'abgeschlossen': task.fertig}">
+        <li v-for="task in tasks" :key="task.id" :class="{'abgeschlossen': task.fertig}">
             <p class="task">{{ task.beschreibung }}</p>
         </li>
     </ul>
@@ -13,7 +13,7 @@ export default {
 </script>
 
 <style>
-    .abgeschlossen{
+    .abgeschlossen {
         text-decoration: line-through;
         color: red;
     }

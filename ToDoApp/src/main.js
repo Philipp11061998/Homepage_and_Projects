@@ -112,8 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Sicherstellen, dass sowohl der Benutzername als auch die Benutzer-ID vorhanden sind
         if (!username || !userId) {
-            window.dispatchEvent(local);
-            document.getElementById("login").style.display = "block";
+            return;
         }
 
         // Anfrage an die PHP-Datei senden
@@ -142,8 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 console.error('Session ist nicht gültig:', data.error);
                 // Möglicherweise den Benutzer abmelden oder zu einer Login-Seite weiterleiten
-                window.dispatchEvent(local);
-                document.getElementById("login").style.display = "block";
+                return;
             }
         })
         .catch(error => console.error('Fehler:', error));
