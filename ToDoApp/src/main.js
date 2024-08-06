@@ -35,57 +35,63 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener('login', (event) => {
         // PHP sende LoginDaten an Server und warte Antwort ab muss hier hin
         let { username, password } = event.detail;
+
+
         localStorage.setItem('username', username);
         localStorage.setItem('login', 'server');
 
 
-        if(!handleLogin(username, password)){
+        if(handleLogin(username, password)){
             document.getElementById("username").value = "";
             document.getElementById("password").value = "";
             return;
-        };    
-
-        pullTasksFromDatatable();
-
-        // Hier können weitere Aktionen ausgeführt werden, z.B. Anwendung neu laden oder anzeigen
+        };   
+        
         loginApp.unmount(); // Entladen der aktuellen Vue-Anwendung
         document.getElementById("login").style.display = "none";
-        app2.provide('loginData', { username, password });
-        app2.mount('#app');
         document.getElementById('holder').style.display = "block"; // Einblenden eines bestimmten Elements
         startTasksApp(); // Starten einer anderen Funktion oder Anwendungsteil
-        document.getElementById("FirstHeader").innerHTML = headerToDos + localStorage.getItem('username');
+        document.getElementById("FirstHeader").innerHTML = headerToDos + localStorage.getItem('username').replace(/^"(.+(?="$))"$/, '$1');
+        app2.provide('loginData', { username, password });
+        app2.mount('#app');
+        console.log('Application successfully updated');    
     });
 
     window.addEventListener('registry', (event) => {
         let { username, password } = event.detail;
+    
         localStorage.setItem('login', 'server');
-
-
+        console.log('Login status set in localStorage');
+    
         if (!checkUsername(username) && username.length > 3) {
-            return alert("Der Username ist bereits vergeben.");
-        } else if (username.length <= 3){
-            alert("Bitte wähle einen Usernamen der länger als 3 Zeichen ist.")
+            alert("Der Username ist bereits vergeben.");
+            return;
+        } else if (username.length <= 3) {
+            alert("Bitte wähle einen Usernamen der länger als 3 Zeichen ist.");
+            return;
         }
-
-        if(!handleRegister(username, password)){
+    
+        if (!handleRegister(username, password)) {
+            console.log('Registration failed');
             document.getElementById("username_reg").value = "";
             document.getElementById("password_Reg").value = "";
             return;
-        }; 
-
+        }
+    
         localStorage.setItem('username', JSON.stringify(username));
 
-        // Hier können weitere Aktionen ausgeführt werden, z.B. Anwendung neu laden oder anzeigen
+        console.log('Username set in localStorage:', username);
+
         loginApp.unmount(); // Entladen der aktuellen Vue-Anwendung
         document.getElementById("login").style.display = "none";
         app2.provide('loginData', { username, password });
         app2.mount('#app');
         document.getElementById('holder').style.display = "block"; // Einblenden eines bestimmten Elements
         startTasksApp(); // Starten einer anderen Funktion oder Anwendungsteil
-        document.getElementById("FirstHeader").innerHTML = headerToDos + localStorage.getItem('username');
+        document.getElementById("FirstHeader").innerHTML = headerToDos + localStorage.getItem('username').replace(/^"(.+(?="$))"$/, '$1');
+        console.log('Application successfully updated');
     });
-
+    
     window.addEventListener('local', () => {
         console.log("Ich werde ausgeführt");
         localStorage.setItem('login', 'local');
@@ -135,12 +141,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 app2.mount('#app'); // Neu laden der Vue-Anwendung
                 document.getElementById('holder').style.display = "block"; // Einblenden eines bestimmten Elements
                 startTasksApp(); // Starten einer anderen Funktion oder Anwendungsteil
-                document.getElementById("FirstHeader").innerHTML = headerToDos + localStorage.getItem('username');
+                document.getElementById("FirstHeader").innerHTML = headerToDos + localStorage.getItem('username').replace(/^"(.+(?="$))"$/, '$1');
                 pullTasksFromDatatable();
 
             } else {
                 console.error('Session ist nicht gültig:', data.error);
                 // Möglicherweise den Benutzer abmelden oder zu einer Login-Seite weiterleiten
+                document.getElementById("login").style.display = "block";
                 return;
             }
         })
@@ -191,6 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 localStorage.setItem('user_id', data.user_id);
                 // Weiterleitung oder Aktualisierung der Ansicht
                 console.log('Login erfolgreich.', 'User-ID: ', data.user_id);
+                pullTasksFromDatatable();
             } else if (data.error) {
                 console.error('Login fehlgeschlagen:', data.error);
                 alert(data.error); // Zeigt die Fehlermeldung als Benutzerbenachrichtigung an
@@ -205,7 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function handleRegister(username, password) {
-        fetch('https://philippk.name/ToDoApp/register.php', {
+        return fetch('https://philippk.name/ToDoApp/register.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -217,19 +225,27 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                console.log('Registrierung erfolgreich:', data.success);
-                // Weiterleitung zur Login-Seite oder andere Aktion
-            } else if (data.error){
+            console.log('Server Antwort:', data); // Debug-Ausgabe der Antwort
+            
+            // Überprüfe, ob der Erfolg gemeldet wird und ob user_id vorhanden ist
+            if (data.user_id) {
+                console.log('Registrierung erfolgreich. User ID:', data.user_id);
+                localStorage.setItem('user_id', data.user_id); // Speichern der user_id
+                return true;
+            } else if (data.error) {
                 console.error('Registrierung fehlgeschlagen:', data.error);
                 alert(data.error); // Zeigt die Fehlermeldung als Benutzerbenachrichtigung an
                 return false;
-            }else {
-                console.error('Registrierung fehlgeschlagen:', data.error);
+            } else {
+                console.error('Unbekannter Fehler:', data);
+                return false;
             }
         })
-        .catch(error => console.error('Fehler:', error));
-    } 
+        .catch(error => {
+            console.error('Fehler beim Registrieren:', error);
+            return false;
+        });
+    }    
 
     async function checkUsername(username) {
         try {
@@ -253,17 +269,15 @@ document.addEventListener("DOMContentLoaded", () => {
     function pullTasksFromDatatable() {
         const userId = localStorage.getItem('user_id');
         const username = localStorage.getItem('username');
-    
-        if (!userId || !username) {
-            console.error('Benutzer-ID oder Benutzername fehlt');
-            return;
-        }
+
+        console.log("userID: " + userId);
+        console.log("username" + username)
     
         fetch(`https://philippk.name/ToDoApp/tasks.php?user_id=${userId}&username=${encodeURIComponent(username)}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
         })
         .then(response => {
             if (!response.ok) {

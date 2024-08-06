@@ -19,7 +19,7 @@ header('Content-Type: application/json');
 
 // Benutzerdaten erhalten
 $data = json_decode(file_get_contents('php://input'), true);
-$username = $data['username'];
+$username = trim($data['username'], '"'); // Entferne zusätzliche Anführungszeichen
 $user_id = isset($data['user_id']) ? (int)$data['user_id'] : 0;
 
 // Verbindungsinformationen für die Datenbank
@@ -35,6 +35,10 @@ if ($conn->connect_error) {
 // Überprüfen, ob der Session-Cookie zu den Benutzerdaten passt
 $sql = "SELECT id FROM users WHERE username = ? AND id = ?";
 $stmt = $conn->prepare($sql);
+if ($stmt === false) {
+    echo json_encode(['error' => 'Fehler beim Vorbereiten der SQL-Anweisung: ' . $conn->error]);
+    exit();
+}
 $stmt->bind_param("si", $username, $user_id);
 $stmt->execute();
 $result = $stmt->get_result();

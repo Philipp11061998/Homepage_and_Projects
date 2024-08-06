@@ -61,8 +61,6 @@ export default {
                document.getElementById("unfinished").style.display = "block";
             }
         }
-
-        this.refreshTasks();
     },
     methods: {
         FinOrUnfinTaskToggle(){
@@ -225,11 +223,6 @@ export default {
         async refreshTasks() {
             const userId = localStorage.getItem('user_id');
             const username = localStorage.getItem('username');
-
-            if (!userId || !username) {
-                console.error('Benutzer-ID oder Benutzername fehlt');
-                return;
-            }
 
             try {
                 const tasksResponse = await fetch(`https://philippk.name/ToDoApp/tasks.php?user_id=${userId}&username=${encodeURIComponent(username)}`, {

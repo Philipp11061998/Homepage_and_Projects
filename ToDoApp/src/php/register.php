@@ -17,56 +17,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 header('Content-Type: application/json');
 
-// Benutzerdaten erhalten
+// Session starten
+session_start();
+
+// Hole die POST-Daten
 $data = json_decode(file_get_contents('php://input'), true);
-$username = $data['username'];
-$password = $data['password'];
 
-// Verbindungsinformationen für die Datenbank
-$config = require_once __DIR__ . '/../../config/config.php';
-$conn = new mysqli($config['db_host'], $config['db_user'], $config['db_pass'], $config['db_name']);
+if (isset($data['username']) && isset($data['password'])) {
+    $username = $data['username'];
+    $password = $data['password'];
 
-// Verbindung überprüfen
-if ($conn->connect_error) {
-    echo json_encode(['error' => 'Verbindung zur Datenbank fehlgeschlagen: ' . $conn->connect_error]);
-    exit();
-}
+    // Verbindungsinformationen für die Datenbank
+    $config = require_once __DIR__ . '/../../config/config.php';
+    $conn = new mysqli($config['db_host'], $config['db_user'], $config['db_pass'], $config['db_name']);
 
-// Benutzername auf Einzigartigkeit prüfen
-$sql = "SELECT id FROM users WHERE username = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $username);
-$stmt->execute();
-$result = $stmt->get_result();
+    // Verbindung überprüfen
+    if ($conn->connect_error) {
+        echo json_encode(['error' => 'Verbindung zur Datenbank fehlgeschlagen: ' . $conn->connect_error]);
+        exit();
+    }
 
-if ($result->num_rows > 0) {
-    echo json_encode(['error' => 'Benutzername bereits vergeben']);
+    // Bereite das Statement zum Einfügen des neuen Benutzers vor
+    $stmt = $conn->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)");
+    $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+
+    if (!$stmt) {
+        echo json_encode(['error' => 'Fehler beim Vorbereiten des Statements: ' . $conn->error]);
+        exit();
+    }
+
+    $stmt->bind_param("ss", $username, $hashedPassword);
+
+    if ($stmt->execute()) {
+        // Registrierung erfolgreich, Session starten
+        $_SESSION['user_id'] = $conn->insert_id;
+        $_SESSION['username'] = $username;
+
+        // Setze den Session-Cookie
+        $cookieParams = session_get_cookie_params();
+        setcookie(session_name(), session_id(), time() + (14 * 24 * 60 * 60), $cookieParams['path'], $cookieParams['domain'], $cookieParams['secure'], $cookieParams['httponly']);
+
+        // Rückgabe von Erfolg und user_id
+        echo json_encode([
+            'user_id' => $_SESSION['user_id'] // Rückgabe der user_id aus der Session
+        ]);
+    } else {
+        echo json_encode(['error' => 'Fehler beim Einfügen des Benutzers: ' . $stmt->error]);
+    }
+
+    $stmt->close();
     $conn->close();
-    exit();
-}
-
-// Passwort hashen
-$password_hash = password_hash($password, PASSWORD_BCRYPT);
-
-// Neuen Benutzer einfügen
-$sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("ss", $username, $password_hash);
-
-if ($stmt->execute()) {
-    // Registrierung erfolgreich, Session starten
-    session_start();
-    $_SESSION['user_id'] = $conn->insert_id;
-    $_SESSION['username'] = $username;
-    
-    // Setze den Session-Cookie
-    setcookie(session_name(), session_id(), time() + (14 * 24 * 60 * 60), '/', '', true, true);
-
-    echo json_encode(['success' => 'Benutzer registriert']);
 } else {
-    echo json_encode(['error' => 'Fehler bei der Registrierung']);
+    echo json_encode(['error' => 'Ungültige Eingabedaten']);
 }
-
-$stmt->close();
-$conn->close();
 ?>
