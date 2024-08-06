@@ -49,11 +49,8 @@ export default {
         };
     },
     mounted() {
-        const storedTasks = localStorage.getItem("task");
         const vis = localStorage.getItem("visibility");
-        if (storedTasks) {
-            this.tasks = JSON.parse(storedTasks);
-        }
+
         if (vis){
             this.visibility = JSON.parse(vis);
             if(this.visibility.all){
@@ -65,13 +62,63 @@ export default {
             }
         }
 
+        const userId = localStorage.getItem('user_id');
+        const username = localStorage.getItem('username');
+    
+        if (!userId || !username) {
+            console.error('Benutzer-ID oder Benutzername fehlt');
+            return;
+        }
+    
+        fetch(`https://philippk.name/ToDoApp/tasks.php?user_id=${userId}&username=${encodeURIComponent(username)}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP-Fehler! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (Array.isArray(data)) {
+                if (data.length === 0) {
+                    console.log('Keine Tasks vorhanden');
+                } else {
+                    // Aufgaben im LocalStorage speichern
+                    localStorage.setItem('tasks', JSON.stringify(data));
+                    
+                    // Tasks in this.tasks pushen
+                    this.tasks = data;  // Aktualisiert `this.tasks` mit den erhaltenen Daten
+                }
+            } else if (data.error) {
+                console.error('Fehler:', data.error);
+            }
+        })
+        .catch(error => console.error('Fehler:', error));
     },
     methods: {
-        handleAddTask(task) {
-            let taskLength = this.tasks.length;
-            this.tasks.push({ beschreibung: task, fertig: false, ID: taskLength });
-            this.tasks.reverse();
-            localStorage.setItem("task", JSON.stringify(this.tasks));
+        handleAddTask(taskDescription) {
+            const userId = localStorage.getItem('user_id');
+            if (!userId) {
+                console.error('Benutzer-ID fehlt');
+                return;
+            }
+
+            // Erstellen eines Task-Objekts
+            const task = {
+                beschreibung: taskDescription,
+                fertig: false, // Neue Aufgaben sind standardmäßig nicht fertig
+                user_id: userId
+            };
+
+            // Hinzufügen des neuen Tasks zum Aufgaben-Array
+            this.tasks.push(task);
+
+            // Aufgaben an den Server senden
+            this.sendTasksToServer(userId, this.tasks);
         },
         FinOrUnfinTaskToggle(){
             localStorage.setItem("task", JSON.stringify(this.tasks));
@@ -116,7 +163,8 @@ export default {
                 }
             }
 
-            localStorage.setItem("task", JSON.stringify(this.tasks));
+            const userId = localStorage.getItem('user_id');
+            this.sendTasksToServer(userId, this.tasks);
 
         },
         logout(){
@@ -126,7 +174,55 @@ export default {
         },
         notCoded(){
             alert("Funktion noch nicht eingebunden.")
+        },
+        async sendTasksToServer(userId, tasks) {
+        // Überprüfen, ob die Aufgaben im richtigen Format vorliegen
+        const formattedTasks = tasks.map(task => ({
+            beschreibung: task.beschreibung,
+            fertig: task.fertig,
+            user_id: task.user_id
+        }));
+
+        try {
+            const response = await fetch('https://philippk.name/ToDoApp/save_tasks.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user_id: userId, tasks: formattedTasks })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                console.log('Tasks erfolgreich gespeichert');
+
+                const username = localStorage.getItem('username');
+                if (!userId || !username) {
+                    console.error('Benutzer-ID oder Benutzername fehlt');
+                    return;
+                }
+
+                const tasksResponse = await fetch(`https://philippk.name/ToDoApp/tasks.php?user_id=${userId}&username=${encodeURIComponent(username)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const tasksData = await tasksResponse.json();
+
+                if (Array.isArray(tasksData)) {
+                    localStorage.setItem('tasks', JSON.stringify(tasksData));
+                    this.tasks = tasksData;
+                } else {
+                    console.error('Fehler beim Abrufen der Aufgaben:', tasksData.error);
+                }
+            } else {
+                console.error('Fehler beim Speichern der Tasks:', data.error);
+            }
+        } catch (error) {
+            console.error('Fehler:', error);
         }
+    },
     },
     computed: {
         nichterledigt() {

@@ -23,7 +23,6 @@ import Log from './components/LoginPage/log.vue';
 import Reg from './components/LoginPage/reg.vue';
 import Guest from './components/LoginPage/guest.vue';
 
-const registry = new CustomEvent('registry', {});
 const local = new CustomEvent('local', {});
 
 export default {
@@ -57,7 +56,15 @@ export default {
 
             window.dispatchEvent(login);
         },
-        handleRegistry(){
+        handleRegistry: function(data){
+            const username = data.username;
+            const password = data.password;
+            const registry = new CustomEvent('registry', {
+                detail: {
+                    username: username,
+                    password: password
+                }     
+            });
             window.dispatchEvent(registry);
         },  
         SkipToLocal(){
@@ -72,6 +79,7 @@ export default {
                 });
             } else if (loginValue === 'server'){
                 this.$nextTick(() => {
+                    const server = new CustomEvent('server', {});
                     window.dispatchEvent(server);
                 });
             }
