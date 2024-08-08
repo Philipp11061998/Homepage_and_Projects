@@ -4,7 +4,7 @@
         <button id="logout" class="add nav_button" @click="logout">Logout</button>
     </nav>
     <div>
-        <label id="new"><span @mousedown.prevent>Neue Aufgabe hinzufügen:</span>
+        <label id="new"><span @mousedown.prevent>Neue Aufgabe hinzufügen:</span><span id="localMessage"> Die Aufgaben werden gelöscht, sobald die Browserdaten zurückgesetzt werden oder sich jemand anderes anmeldet.</span>
             <newT @add-task="handleAddTask"/>
         </label>
         <div id="holder_tasks">
@@ -102,17 +102,11 @@ export default {
             }
             localStorage.setItem("task", JSON.stringify(this.tasks));
         },
-        handleToggleTaskStatus(array, index) {
-            if (array === "unfinished") {
-                const taskIndex = this.tasks.findIndex(task => !task.fertig && task.beschreibung === this.nichterledigt[index].beschreibung);
-                if (taskIndex > -1) {
-                    this.tasks[taskIndex].fertig = !this.tasks[taskIndex].fertig
-                }
-            } else if (array === "finished") {
-                const taskIndex = this.tasks.findIndex(task => task.fertig && task.beschreibung === this.erledigt[index].beschreibung);
-                if (taskIndex > -1) {
-                    this.tasks[taskIndex].fertig = !this.tasks[taskIndex].fertig
-                }
+        handleToggleTaskStatus(taskId) {
+            // Finde die Aufgabe und toggle den Status
+            const task = this.tasks.find(t => t.id === taskId);
+            if (task) {
+                task.fertig = !task.fertig;
             }
 
             localStorage.setItem("task", JSON.stringify(this.tasks));
@@ -156,6 +150,11 @@ export default {
         align-items: center;
         gap: 0.5rem;
         font-size: 2.5rem;
+    }
+
+    #localMessage{
+        font-size: .75rem;
+        font-style: italic;
     }
 
     #finished,

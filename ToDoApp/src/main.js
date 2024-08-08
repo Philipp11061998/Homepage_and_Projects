@@ -2,7 +2,7 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import SecondApp from './AppServerSite.vue';
 import Login from './Login.vue';
-import { event } from 'jquery';
+import { login } from './custom_JS_Events/LoginToServer';
 
 document.addEventListener("DOMContentLoaded", () => {
     const headerToDos = document.getElementById("FirstHeader").innerHTML;
@@ -33,28 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
     //Wird bei aktivem Login ausgeführt (wenn User auf einloggen klickt). Siehe Server
     //für auto Login über localStorage
     window.addEventListener('login', (event) => {
-        // PHP sende LoginDaten an Server und warte Antwort ab muss hier hin
-        let { username, password } = event.detail;
-
-
-        localStorage.setItem('username', username);
-        localStorage.setItem('login', 'server');
-
-
-        if(handleLogin(username, password)){
-            document.getElementById("username").value = "";
-            document.getElementById("password").value = "";
-            return;
-        };   
-        
-        loginApp.unmount(); // Entladen der aktuellen Vue-Anwendung
-        document.getElementById("login").style.display = "none";
-        document.getElementById('holder').style.display = "block"; // Einblenden eines bestimmten Elements
-        startTasksApp(); // Starten einer anderen Funktion oder Anwendungsteil
-        document.getElementById("FirstHeader").innerHTML = headerToDos + localStorage.getItem('username').replace(/^"(.+(?="$))"$/, '$1');
-        app2.provide('loginData', { username, password });
-        app2.mount('#app');
-        console.log('Application successfully updated');    
+        login(event);
     });
 
     window.addEventListener('registry', (event) => {
@@ -135,6 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(response => response.json())
         .then(data => {
             if (data.valid) {
+                emptyLocalStorage();
                 console.log('Session ist gültig.');
                 // Weitere Aktionen bei erfolgreicher Session
                 loginApp.unmount(); // Entladen der aktuellen Vue-Anwendung
@@ -163,138 +143,152 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("holder").style.display = "none";
         document.getElementById("login").style.display = "block";
 
+    }); 
+
+});
+
+
+export function handleRegister(username, password) {
+    return fetch('https://philippk.name/ToDoApp/register.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            username: username,
+            password: password
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Server Antwort:', data); // Debug-Ausgabe der Antwort
+        
+        // Überprüfe, ob der Erfolg gemeldet wird und ob user_id vorhanden ist
+        if (data.user_id) {
+            emptyLocalStorage();
+            console.log('Registrierung erfolgreich. User ID:', data.user_id);
+            localStorage.setItem('user_id', data.user_id); // Speichern der user_id
+            return true;
+        } else if (data.error) {
+            console.error('Registrierung fehlgeschlagen:', data.error);
+            alert(data.error); // Zeigt die Fehlermeldung als Benutzerbenachrichtigung an
+            return false;
+        } else {
+            console.error('Unbekannter Fehler:', data);
+            return false;
+        }
+    })
+    .catch(error => {
+        console.error('Fehler beim Registrieren:', error);
+        return false;
     });
+}   
 
-    function startTasksApp() {
-        // Fokussieren des Elements
-        const newTask = document.getElementById("new_task");
-        if (newTask) {
-            newTask.focus();
-        }
 
-        // Event-Listener für Header hinzufügen
-        const header = document.getElementById("FirstHeader");
-        if (header) {
-            header.addEventListener("dblclick", (event) => event.preventDefault());
-            header.addEventListener("mousedown", (event) => event.preventDefault());
-            header.addEventListener("click", (event) => event.preventDefault());
+export function handleLogin(username, password) {
+    fetch('https://philippk.name/ToDoApp/login.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+            'username': username,
+            'password': password
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.user_id) {
+            emptyLocalStorage();
+            localStorage.setItem('user_id', data.user_id);
+            // Weiterleitung oder Aktualisierung der Ansicht
+            console.log('Login erfolgreich.', 'User-ID: ', data.user_id);
+            pullTasksFromDatatable();
+        } else if (data.error) {
+            console.error('Login fehlgeschlagen:', data.error);
+            alert(data.error); // Zeigt die Fehlermeldung als Benutzerbenachrichtigung an
+            return false;
+        } else {
+            console.error('Unbekannte Antwort vom Server:', data);
         }
+    })
+    .catch(error => {
+        console.error('Fehler bei der Anfrage:', error);
+    });
+}
+
+export function startTasksApp() {
+    // Fokussieren des Elements
+    const newTask = document.getElementById("new_task");
+    if (newTask) {
+        newTask.focus();
     }
 
-    function handleLogin(username, password) {
-        fetch('https://philippk.name/ToDoApp/login.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams({
-                'username': username,
-                'password': password
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.user_id) {
-                localStorage.setItem('user_id', data.user_id);
-                // Weiterleitung oder Aktualisierung der Ansicht
-                console.log('Login erfolgreich.', 'User-ID: ', data.user_id);
-                pullTasksFromDatatable();
-            } else if (data.error) {
-                console.error('Login fehlgeschlagen:', data.error);
-                alert(data.error); // Zeigt die Fehlermeldung als Benutzerbenachrichtigung an
-                return false;
-            } else {
-                console.error('Unbekannte Antwort vom Server:', data);
-            }
-        })
-        .catch(error => {
-            console.error('Fehler bei der Anfrage:', error);
-        });
+    // Event-Listener für Header hinzufügen
+    const header = document.getElementById("FirstHeader");
+    if (header) {
+        header.addEventListener("dblclick", (event) => event.preventDefault());
+        header.addEventListener("mousedown", (event) => event.preventDefault());
+        header.addEventListener("click", (event) => event.preventDefault());
     }
+}
 
-    function handleRegister(username, password) {
-        return fetch('https://philippk.name/ToDoApp/register.php', {
+export function pullTasksFromDatatable() {
+    const userId = localStorage.getItem('user_id');
+    const username = localStorage.getItem('username');
+
+    console.log("userID: " + userId);
+    console.log("username" + username)
+
+    fetch(`https://philippk.name/ToDoApp/tasks.php?user_id=${userId}&username=${encodeURIComponent(username)}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP-Fehler! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (Array.isArray(data) && data.length === 0) {
+            console.log('Keine Tasks vorhanden');
+        } else if (data.error) {
+            console.error('Fehler:', data.error);
+        } else {
+            // Aufgaben im LocalStorage speichern
+            localStorage.setItem('tasks', JSON.stringify(data));
+        }
+    })
+    .catch(error => console.error('Fehler:', error));
+}   
+
+
+export async function checkUsername(username) {
+    try {
+        const response = await fetch('https://philippk.name/ToDoApp/checkUsername.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                username: username,
-                password: password
+                username: username
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Server Antwort:', data); // Debug-Ausgabe der Antwort
-            
-            // Überprüfe, ob der Erfolg gemeldet wird und ob user_id vorhanden ist
-            if (data.user_id) {
-                console.log('Registrierung erfolgreich. User ID:', data.user_id);
-                localStorage.setItem('user_id', data.user_id); // Speichern der user_id
-                return true;
-            } else if (data.error) {
-                console.error('Registrierung fehlgeschlagen:', data.error);
-                alert(data.error); // Zeigt die Fehlermeldung als Benutzerbenachrichtigung an
-                return false;
-            } else {
-                console.error('Unbekannter Fehler:', data);
-                return false;
-            }
-        })
-        .catch(error => {
-            console.error('Fehler beim Registrieren:', error);
-            return false;
         });
-    }    
-
-    async function checkUsername(username) {
-        try {
-            const response = await fetch('https://philippk.name/ToDoApp/checkUsername.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    username: username
-                })
-            });
-            const data = await response.json();
-            return !data.exists; // Wenn `data.exists` true ist, ist der Username vergeben, also geben wir `false` zurück
-        } catch (error) {
-            console.error('Fehler:', error);
-            return false; // Im Fehlerfall gehen wir davon aus, dass der Username nicht verfügbar ist
-        }
+        const data = await response.json();
+        return !data.exists; // Wenn `data.exists` true ist, ist der Username vergeben, also geben wir `false` zurück
+    } catch (error) {
+        console.error('Fehler:', error);
+        return false; // Im Fehlerfall gehen wir davon aus, dass der Username nicht verfügbar ist
     }
+} 
 
-    function pullTasksFromDatatable() {
-        const userId = localStorage.getItem('user_id');
-        const username = localStorage.getItem('username');
-
-        console.log("userID: " + userId);
-        console.log("username" + username)
-    
-        fetch(`https://philippk.name/ToDoApp/tasks.php?user_id=${userId}&username=${encodeURIComponent(username)}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP-Fehler! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (Array.isArray(data) && data.length === 0) {
-                console.log('Keine Tasks vorhanden');
-            } else if (data.error) {
-                console.error('Fehler:', data.error);
-            } else {
-                // Aufgaben im LocalStorage speichern
-                localStorage.setItem('tasks', JSON.stringify(data));
-            }
-        })
-        .catch(error => console.error('Fehler:', error));
-    }    
-});
+export function emptyLocalStorage(){
+    localStorage.setItem('login', '');
+    localStorage.removeItem('tasks', '');
+    localStorage.removeItem('user_id', '');
+    localStorage.removeItem('username', '');
+    localStorage.removeItem('visibility', '');
+}
