@@ -30,16 +30,6 @@ export async function loginToServer(username, password) {
         document.getElementById("password").value = "";
         return;
     }
-
-    // Tasks nach erfolgreichem Login abrufen und die Anwendung starten
-    document.getElementById("login").style.display = "none";
-    document.getElementById('holder').style.display = "block";
-    await pullTasksFromDatatable(username); // Sicherstellen, dass die Aufgaben geladen werden, bevor die App gestartet wird
-
-    app2.provide('loginData', { username, password });
-    app2.mount('#app');
-    document.getElementById("FirstHeader").innerHTML = headerToDos + username.replace(/^"(.+(?="$))"$/, '$1');
-    startTasksApp(); // Starte die Tasks-App nach dem Abrufen der Tasks
 }
 
 
@@ -61,11 +51,11 @@ export function handleLogin(username, password) {
             emptyLocalStorage();
             localStorage.setItem('login', 'server');
             localStorage.setItem('user_id', data.user_id);
+            //pullTasks ist notwendig, da nur dort das setten des usernames in den
+            //LocalStorage funktioniert hat. Das ist notwendig um beim neuladen der Seite
+            //Das Server Event richtig auszuführen
             pullTasksFromDatatable(username);
-            // Weiterleitung oder Aktualisierung der Ansicht
-            console.log('Login erfolgreich.', 'User-ID: ', data.user_id);
-            document.getElementById("login").style.display = "none";
-            document.getElementById('holder').style.display = "block"; // Einblenden eines bestimmten Elements
+            location.reload();
             return true; // Erfolgreicher Login
         } else if (data.error) {
             console.error('Login fehlgeschlagen:', data.error);

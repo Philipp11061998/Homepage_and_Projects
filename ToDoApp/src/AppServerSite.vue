@@ -66,7 +66,7 @@ export default {
             const storedTasks = localStorage.getItem('tasks');
             if (storedTasks) {
                 this.tasks = JSON.parse(storedTasks);
-                console.log("Tasks wurden geladen:", this.tasks);
+                console.log("Tasks wurden geladen");
             } else {
                 console.log("Keine Tasks im LocalStorage gefunden.");
             }
