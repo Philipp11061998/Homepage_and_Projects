@@ -53,10 +53,16 @@ if (isset($data['username']) && isset($data['password'])) {
         $_SESSION['user_id'] = $conn->insert_id;
         $_SESSION['username'] = $username;
 
-        // Setze den Session-Cookie
-        $cookieParams = session_get_cookie_params();
-        setcookie(session_name(), session_id(), time() + (14 * 24 * 60 * 60), $cookieParams['path'], $cookieParams['domain'], $cookieParams['secure'], $cookieParams['httponly']);
-
+        // Setze den Session-Cookie mit SameSite=None
+        setcookie(session_name(), session_id(), [
+            'expires' => time() + (14 * 24 * 60 * 60), // Lebensdauer des Cookies
+            'path' => '/', // Pfad für das Cookie
+            'domain' => '', // Optional: gib die Domain an
+            'secure' => true, // Cookie nur über HTTPS senden
+            'httponly' => true, // JavaScript-Zugriff verhindern
+            'samesite' => 'None' // SameSite-Attribut auf None setzen
+        ]);
+        
         // Rückgabe von Erfolg und user_id
         echo json_encode([
             'user_id' => $_SESSION['user_id'] // Rückgabe der user_id aus der Session

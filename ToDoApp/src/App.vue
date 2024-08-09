@@ -114,6 +114,7 @@ export default {
         logout(){
             const logout = new CustomEvent('logout', {});
             localStorage.setItem('login', '');
+            localStorage.removeItem("username");
             window.dispatchEvent(logout);
         },
         notCoded(){

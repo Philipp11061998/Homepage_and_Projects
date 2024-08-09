@@ -1,8 +1,7 @@
 import { createApp } from 'vue';
-import { handleLogin } from "@/main";
-import Login from '../Login.vue';
+import { startTasksApp, emptyLocalStorage, pullTasksFromDatatable } from "@/main";
 import SecondApp from '../AppServerSite.vue';
-import { startTasksApp } from '@/main';
+import Login from '@/Login.vue';
 
 const createLoginApp = () => createApp(Login);
 let loginApp = createLoginApp();
@@ -12,26 +11,71 @@ let app2 = createSecondAppInstance();
 
 const headerToDos = document.getElementById("FirstHeader").innerHTML;
 
+export async function loginToServer(username, password) {
+    const headerToDos = document.getElementById("FirstHeader").innerHTML;
 
-export function login(eventData) {
-    let { username, password } = eventData.detail;
+    if (username && typeof username === 'string' && username.length > 0) {
+        localStorage.setItem('username', username.replace(/^"(.+(?="$))"$/, '$1'));
+        console.log("Username gespeichert:", localStorage.getItem('username'));
+    } else {
+        console.error("Ungültiger Username:", username);
+        return;
+    }
 
-    localStorage.setItem('username', username);
-    localStorage.setItem('login', 'server');
+    const loginSuccess = await handleLogin(username, password);
 
-
-    if(!handleLogin(username, password)){
+    // Wenn der Login nicht erfolgreich war, abbrechen
+    if (!loginSuccess) {
         document.getElementById("username").value = "";
         document.getElementById("password").value = "";
         return;
-    };   
-    
-    loginApp.unmount(); // Entladen der aktuellen Vue-Anwendung
+    }
+
+    // Tasks nach erfolgreichem Login abrufen und die Anwendung starten
     document.getElementById("login").style.display = "none";
-    document.getElementById('holder').style.display = "block"; // Einblenden eines bestimmten Elements
-    startTasksApp(); // Starten einer anderen Funktion oder Anwendungsteil
-    document.getElementById("FirstHeader").innerHTML = headerToDos + localStorage.getItem('username').replace(/^"(.+(?="$))"$/, '$1');
+    document.getElementById('holder').style.display = "block";
+    await pullTasksFromDatatable(username); // Sicherstellen, dass die Aufgaben geladen werden, bevor die App gestartet wird
+
     app2.provide('loginData', { username, password });
     app2.mount('#app');
-    console.log('Application successfully updated');
+    document.getElementById("FirstHeader").innerHTML = headerToDos + username.replace(/^"(.+(?="$))"$/, '$1');
+    startTasksApp(); // Starte die Tasks-App nach dem Abrufen der Tasks
 }
+
+
+export function handleLogin(username, password) {
+    return fetch('https://philippk.name/ToDoApp/login.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+            'username': username,
+            'password': password
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.user_id) {
+            // Erfolgreicher Login
+            emptyLocalStorage();
+            localStorage.setItem('login', 'server');
+            localStorage.setItem('user_id', data.user_id);
+            pullTasksFromDatatable(username);
+            // Weiterleitung oder Aktualisierung der Ansicht
+            console.log('Login erfolgreich.', 'User-ID: ', data.user_id);
+            document.getElementById("login").style.display = "none";
+            document.getElementById('holder').style.display = "block"; // Einblenden eines bestimmten Elements
+            return true; // Erfolgreicher Login
+        } else if (data.error) {
+            console.error('Login fehlgeschlagen:', data.error);
+            alert(data.error);
+            return false; // Login fehlgeschlagen
+        }
+    })
+    .catch(error => {
+        console.error('Fehler bei der Anfrage:', error);
+        return false; // Fehler bei der Anfrage
+    });
+}
+

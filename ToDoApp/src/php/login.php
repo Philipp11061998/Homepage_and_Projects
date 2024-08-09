@@ -49,8 +49,15 @@ if ($result->num_rows === 1) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $username;
         
-        // Setze den Session-Cookie
-        setcookie(session_name(), session_id(), time() + (14 * 24 * 60 * 60), '/', '', true, true);
+        // Setze den Session-Cookie mit SameSite=None
+        setcookie(session_name(), session_id(), [
+            'expires' => time() + (14 * 24 * 60 * 60), // Lebensdauer des Cookies
+            'path' => '/', // Pfad für das Cookie
+            'domain' => '', // Optional: gib die Domain an
+            'secure' => true, // Cookie nur über HTTPS senden
+            'httponly' => true, // JavaScript-Zugriff verhindern
+            'samesite' => 'None' // SameSite-Attribut auf None setzen
+        ]);
 
         echo json_encode(['user_id' => $user['id']]);
     } else {

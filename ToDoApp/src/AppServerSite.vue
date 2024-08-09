@@ -61,6 +61,16 @@ export default {
                document.getElementById("unfinished").style.display = "block";
             }
         }
+
+        this.$nextTick(() => {
+            const storedTasks = localStorage.getItem('tasks');
+            if (storedTasks) {
+                this.tasks = JSON.parse(storedTasks);
+                console.log("Tasks wurden geladen:", this.tasks);
+            } else {
+                console.log("Keine Tasks im LocalStorage gefunden.");
+            }
+        });
     },
     methods: {
         FinOrUnfinTaskToggle(){
@@ -81,6 +91,7 @@ export default {
         },
         logout(){
             const logout = new CustomEvent('logout', {});
+            document.getElementById("FirstHeader").innerHTML = "To-do-Liste von ";
             localStorage.setItem('login', '');
             localStorage.removeItem('tasks', '');
             localStorage.removeItem('user_id', '');
