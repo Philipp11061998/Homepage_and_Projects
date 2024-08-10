@@ -88,18 +88,15 @@ export default {
                 localStorage.setItem("visibility", JSON.stringify(this.visibility));
             }
         },
-        handleDeleteTask(array, index) {
-            if (array === "unfinished") {
-                const taskIndex = this.tasks.findIndex(task => !task.fertig && task.beschreibung === this.nichterledigt[index].beschreibung);
-                if (taskIndex > -1) {
-                    this.tasks.splice(taskIndex, 1);
-                }
-            } else if (array === "finished") {
-                const taskIndex = this.tasks.findIndex(task => task.fertig && task.beschreibung === this.erledigt[index].beschreibung);
-                if (taskIndex > -1) {
-                    this.tasks.splice(taskIndex, 1);
-                }
+        handleDeleteTask(taskId) {
+            // Finde die Aufgabe
+            const taskIndex = this.tasks.findIndex(task => task.id === taskId);
+            if (taskIndex > -1) {
+                // Entferne die Aufgabe
+                this.tasks.splice(taskIndex, 1);
             }
+
+            // Speichere die aktualisierte Liste in localStorage
             localStorage.setItem("task", JSON.stringify(this.tasks));
         },
         handleToggleTaskStatus(taskId) {
