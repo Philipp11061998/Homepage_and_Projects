@@ -72,9 +72,6 @@ export default {
         }
     },
     mounted(){
-
-
-
         const loginValue = localStorage.getItem('login');
         if (loginValue === 'local') {
             this.$nextTick(() => {
