@@ -1,6 +1,4 @@
 import { createApp } from 'vue';
-import App from './App.vue';
-import SecondApp from './AppServerSite.vue';
 import Login from './Login.vue';
 import { loginToServer } from './custom_JS_Events/LoginToServer';
 import { registerToServer } from './custom_JS_Events/RegisterToServer';
@@ -8,15 +6,17 @@ import { localLogin } from './custom_JS_Events/localLogin';
 import { autoLoginServer } from './custom_JS_Events/autoLoginServer';
 
 const createLoginApp = () => createApp(Login);
-const createAppInstance = () => createApp(App);
-const createSecondAppInstance = () => createApp(SecondApp);
 
 let loginApp = createLoginApp();
-let app = createAppInstance();
-let app2 = createSecondAppInstance();
+
 
 document.addEventListener("DOMContentLoaded", () => {
     loginApp.mount("#login");
+
+    const username = document.getElementById("username");
+    if (username) {
+        username.focus();
+    }
 
     if (document.getElementById("username_reg")) {
         document.getElementById("username_reg").addEventListener("keyup", () => {
@@ -51,17 +51,6 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener('server', () => {
         autoLoginServer();
     });
-
-    window.addEventListener('logout', () => {
-        app.unmount(); // Entladen der aktuellen Vue-Anwendung
-        loginApp = createLoginApp();
-        app = createAppInstance();
-        loginApp.mount('#login'); // Neu laden der Vue-Anwendung
-        document.getElementById("holder").style.display = "none";
-        document.getElementById("login").style.display = "block";
-
-    }); 
-
 });
 
 export function startTasksApp() {

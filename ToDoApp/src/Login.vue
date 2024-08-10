@@ -72,17 +72,20 @@ export default {
         }
     },
     mounted(){
-            const loginValue = localStorage.getItem('login');
-            if (loginValue === 'local') {
-                this.$nextTick(() => {
-                    window.dispatchEvent(local);
-                });
-            } else if (loginValue === 'server'){
-                this.$nextTick(() => {
-                    const server = new CustomEvent('server', {});
-                    window.dispatchEvent(server);
-                });
-            }
+
+
+
+        const loginValue = localStorage.getItem('login');
+        if (loginValue === 'local') {
+            this.$nextTick(() => {
+                window.dispatchEvent(local);
+            });
+        } else if (loginValue === 'server'){
+            this.$nextTick(() => {
+                const server = new CustomEvent('server', {});
+                window.dispatchEvent(server);
+            });
+        }
     }
 };
 

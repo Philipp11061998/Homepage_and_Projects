@@ -112,10 +112,15 @@ export default {
             localStorage.setItem("task", JSON.stringify(this.tasks));
         },
         logout(){
-            const logout = new CustomEvent('logout', {});
+            document.getElementById("holder").style.display = "none";
+            document.getElementById("login").style.display = "none";
+            location.reload();
+            document.getElementById("FirstHeader").innerHTML = "To-do-Liste von ";
             localStorage.setItem('login', '');
-            localStorage.removeItem("username");
-            window.dispatchEvent(logout);
+            localStorage.removeItem('tasks', '');
+            localStorage.removeItem('user_id', '');
+            localStorage.removeItem('username', '');
+            localStorage.removeItem('visibility', '');
         },
         notCoded(){
             alert("Funktion noch nicht eingebunden.")

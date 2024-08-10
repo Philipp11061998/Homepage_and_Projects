@@ -90,14 +90,15 @@ export default {
             }
         },
         logout(){
-            const logout = new CustomEvent('logout', {});
+            document.getElementById("holder").style.display = "none";
+            document.getElementById("login").style.display = "none";
+            location.reload();
             document.getElementById("FirstHeader").innerHTML = "To-do-Liste von ";
             localStorage.setItem('login', '');
             localStorage.removeItem('tasks', '');
             localStorage.removeItem('user_id', '');
             localStorage.removeItem('username', '');
             localStorage.removeItem('visibility', '');
-            window.dispatchEvent(logout);
         },
         notCoded(){
             alert("Funktion noch nicht eingebunden.")
