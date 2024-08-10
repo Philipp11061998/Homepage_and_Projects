@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loginApp.mount("#login");
 
     const username = document.getElementById("username");
+    
     if (username) {
         username.focus();
     }
