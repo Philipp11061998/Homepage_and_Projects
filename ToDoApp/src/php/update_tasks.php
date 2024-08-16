@@ -20,6 +20,9 @@ header('Content-Type: application/json');
 // Hole die POST-Daten
 $data = json_decode(file_get_contents('php://input'), true);
 
+// Debug: Protokolliere empfangene Daten
+error_log(print_r($data, true));
+
 if (isset($data['user_id']) && isset($data['tasks'])) {
     $user_id = (int)$data['user_id'];
     $tasks = $data['tasks'];
@@ -35,7 +38,7 @@ if (isset($data['user_id']) && isset($data['tasks'])) {
     }
 
     // Bereite das Statement zum Aktualisieren von Aufgaben vor
-    $stmt = $conn->prepare("UPDATE tasks SET beschreibung = ?, fertig = ? WHERE user_id = ? AND id = ?");
+    $stmt = $conn->prepare("UPDATE tasks SET beschreibung = ?, fertig = ?, Goal_Date = ? WHERE user_id = ? AND id = ?");
 
     if (!$stmt) {
         echo json_encode(['error' => 'Fehler beim Vorbereiten des Statements: ' . $conn->error]);
@@ -49,11 +52,27 @@ if (isset($data['user_id']) && isset($data['tasks'])) {
             // Überprüfe, ob die Aufgabe die erforderlichen Parameter hat
             if (isset($task['id']) && isset($task['beschreibung']) && isset($task['fertig'])) {
                 $beschreibung = $task['beschreibung'];
-                $fertig = (bool)$task['fertig'];
+                $fertig = (int)$task['fertig']; // Umwandlung in Integer (0 oder 1)
                 $task_id = (int)$task['id'];
 
-                $stmt->bind_param("siii", $beschreibung, $fertig, $user_id, $task_id);
-                $stmt->execute();
+                // Konvertiere das Datum ins Format YYYY-MM-DD
+                $task_Goal_Date = isset($task['Goal_Date']) ? date('Y-m-d', strtotime(str_replace('.', '-', $task['Goal_Date']))) : null;
+
+                // Debug: Protokolliere Werte vor Bindung
+                error_log("Beschreibung: $beschreibung, Fertig: $fertig, Goal_Date: $task_Goal_Date, User_ID: $user_id, Task_ID: $task_id");
+
+                if ($task_Goal_Date) {
+                    // Goal_Date ist gesetzt
+                    $stmt->bind_param("siisi", $beschreibung, $fertig, $user_id, $task_id, $task_Goal_Date);
+                } else {
+                    // Goal_Date ist nicht gesetzt
+                    $stmt->bind_param("siii", $beschreibung, $fertig, $user_id, $task_id);
+                }
+
+                if (!$stmt->execute()) {
+                    echo json_encode(['error' => 'Fehler beim Ausführen des Statements: ' . $stmt->error]);
+                    exit();
+                }
             } else {
                 throw new Exception('Fehlende Parameter in der Aufgabe');
             }

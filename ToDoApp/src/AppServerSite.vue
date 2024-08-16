@@ -6,19 +6,24 @@
     <div>
         <label id="new">
             <span @mousedown.prevent>Neue Aufgabe hinzufügen:</span>
-            <newT @add-task="handleAddTask"/>
+            <newT 
+            @add-task="handleAddTask"
+            />
         </label>
         <div id="holder_tasks">
             <h2 @mousedown.prevent @click="toggleTasks('unfinished')">Nicht erledigte Aufgaben ({{ nichterledigt.length }})</h2>
-            <unfinished-tasks :tasks="nichterledigt" @delete-task="handleDeleteTask" @toggle-task-status="handleToggleTaskStatus"/>
-
+            <unfinished-tasks :tasks="nichterledigt" 
+            @delete-task="handleDeleteTask" 
+            @toggle-task-status="handleToggleTaskStatus"
+            @update-goal-date="ChangeGoalDate"
+            />
             <hr>
-
             <h2 @mousedown.prevent @click="toggleTasks('finished')">Erledigte Aufgaben ({{ erledigt.length }})</h2>
-            <finished-tasks :tasks="erledigt" @delete-task="handleDeleteTask" @toggle-task-status="handleToggleTaskStatus"/>
-
+            <finished-tasks :tasks="erledigt" 
+            @delete-task="handleDeleteTask" 
+            @toggle-task-status="handleToggleTaskStatus"
+            />
             <hr>
-
             <h2 @mousedown.prevent @click="toggleTasks('all')">Alle Aufgaben ({{ tasks.length }})</h2>
             <all-tasks :tasks="tasks"/>
         </div>
@@ -107,7 +112,7 @@ export default {
             const newTask = {
                 beschreibung: newTaskDescription,
                 fertig: false, // Standardmäßig nicht fertig
-                user_id: localStorage.getItem('user_id')
+                user_id: localStorage.getItem('user_id'),
             };
             
             // Füge die neue Aufgabe zu den lokalen Aufgaben hinzu
@@ -118,6 +123,32 @@ export default {
             
             // Speichere nur die neue Aufgabe auf dem Server
             this.saveTask(newTask);
+        }, 
+        async ChangeGoalDate({ taskId, goalDate }) {
+            console.log('Task ID:', taskId);
+            console.log('Goal Date:', goalDate);
+            
+            const userId = localStorage.getItem('user_id');
+            if (!userId) {
+                console.error('Benutzer-ID fehlt');
+                return;
+            }
+
+            // Aufgabe finden
+            const task = this.tasks.find(t => t.id === taskId);
+            
+            if (!task) {
+                console.error('Aufgabe nicht gefunden');
+                return;
+            }
+
+            // Zieldatum aktualisieren
+            task.Goal_Date = goalDate;
+
+            console.log(task);
+
+            // Aufgabe speichern
+            await this.handleUpdateTask(task);
         },
         async saveTask(task) {
             const userId = localStorage.getItem('user_id');

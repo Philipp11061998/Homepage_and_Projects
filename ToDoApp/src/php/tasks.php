@@ -40,7 +40,7 @@ $result = $stmt->get_result();
 
 if ($result->num_rows === 1) {
     // Aufgaben des Benutzers abfragen
-    $sql = "SELECT id, beschreibung, fertig FROM tasks WHERE user_id = ?";
+    $sql = "SELECT id, beschreibung, fertig, Goal_Date FROM tasks WHERE user_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();

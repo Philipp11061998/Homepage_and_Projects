@@ -94,11 +94,13 @@ export async function pullTasksFromDatatable(username) {
             console.log('Keine Tasks vorhanden');
         } else if (Array.isArray(data) && data.length !== 0) {
             console.log("Tasks vorhanden");
+            localStorage.removeItem('tasks', '');
             localStorage.setItem('tasks', JSON.stringify(data));
         } else if (data.error) {
             console.error('Fehler:', data.error);
         } else {
             // Aufgaben im LocalStorage speichern
+            localStorage.removeItem('tasks', '');
             localStorage.setItem('tasks', JSON.stringify(data));
         }
     } catch (error) {
