@@ -1,9 +1,9 @@
 <template>
     <nav>
-        <button id="profile" class="add nav_button" @click="notCoded">Profil</button>
+        <button id="settings" class="add nav_button" @click="openSettings">Einstellungen</button>
         <button id="logout" class="add nav_button" @click="logout">Logout</button>
     </nav>
-    <div>
+    <div v-if="this.Tasklist">
         <label id="new">
             <span @mousedown.prevent>Neue Aufgabe hinzufügen:</span>
             <newT 
@@ -29,6 +29,7 @@
             <all-tasks :tasks="tasks"/>
         </div>
     </div>
+    <settings v-if="this.settings"/>
 </template>
 
 <script>
@@ -36,13 +37,15 @@ import NewTask from "./components/TaskPage/newTask.vue";
 import FinishedTasks from "./components/TaskPage/finished_tasks.vue";
 import UnfinishedTasks from "./components/TaskPage/unfinished_tasks.vue";
 import AllTasks from "./components/TaskPage/all_tasks.vue";
+import settings from './components/settings/settings.vue';
 
 export default {
     components: {
         newT: NewTask,
         finishedTasks: FinishedTasks,
         unfinishedTasks: UnfinishedTasks,
-        allTasks: AllTasks
+        allTasks: AllTasks,
+        settings
     },
     data() {
         return {
@@ -50,8 +53,10 @@ export default {
             visibility: {
                 all: false,
                 finished: false,
-                unfinished: true
-            }
+                unfinished: true,
+            },
+            settings: false,
+            Tasklist: true
         };
     },
     mounted() {
@@ -106,8 +111,9 @@ export default {
             localStorage.removeItem('username', '');
             localStorage.removeItem('visibility', '');
         },
-        notCoded(){
-            alert("Funktion noch nicht eingebunden.")
+        openSettings(){
+            this.Tasklist = !this.Tasklist;
+            this.settings = !this.settings;
         },
         handleAddTask(newTaskDescription) {
             const newTask = {
@@ -125,7 +131,7 @@ export default {
             // Speichere nur die neue Aufgabe auf dem Server
             this.saveTask(newTask);
         }, 
-        async ChangeGoalDate({ taskId, goalDate }) {
+        async ChangeGoalDate( taskId, goalDate ) {
             console.log('Task ID:', taskId);
             console.log('Goal Date:', goalDate);
             

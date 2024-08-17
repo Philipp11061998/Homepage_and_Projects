@@ -74,11 +74,41 @@ nav{
     opacity: .7;
 }
 
-.dateFilled{
+.changeDate{
+    background-color: lightblue;
+}
+
+.goalDateUnfilled{
     margin-top: .5rem;
     display: flex;
     flex-direction: row;
     gap: 1rem;
+    color: lightgray;
+    font-weight: bold;
+    font-style: italic;
+    font-size: .8rem;
+    margin-left: .5rem;
+}
+
+.goalDateFilled{
+    font-style: italic;
+    font-size: .8rem;
+    margin-left: .5rem;
+}
+
+.status{
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+hr{
+    border: 0;
+    height: 1px;
+    background-color: black;
+    margin: 0; 
+    margin-top: 1rem;
+    margin-bottom: .7rem;
 }
 
 @media only screen and (max-width: 530px) {

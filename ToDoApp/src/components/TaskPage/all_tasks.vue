@@ -1,20 +1,38 @@
 <template>
     <ul id="all">
-        <li v-for="task in tasks" :key="task.id" :class="{'abgeschlossen': task.fertig}">
-            <p class="task">{{ task.beschreibung }}</p>
-        </li>
+        <TaskDetails :tasks 
+            @update-goal-date="updateGoalDate" 
+            @delete-task="loeschen"
+            @toggle-task-status="erledigtWechseln"
+        />
     </ul>
 </template>
 
 <script>
+import TaskDetails from './tasks.vue'
+
 export default {
-    props: ['tasks']
+    props: ['tasks'],
+    components: {
+        TaskDetails
+    },
+    methods: {
+        loeschen(taskId) {
+            this.$emit('delete-task', taskId);
+        },
+        erledigtWechseln(taskId) {
+            this.$emit('toggle-task-status', taskId);
+        },
+        updateGoalDate(taskId, formattedDate) {
+            console.log(taskId, formattedDate);
+            const id = taskId;
+            const date = formattedDate;
+
+            this.$emit('update-goal-date', id, date );
+        }
+    }
 };
 </script>
 
 <style>
-    .abgeschlossen {
-        text-decoration: line-through;
-        color: red;
-    }
 </style>
