@@ -29,7 +29,9 @@
             <all-tasks :tasks="tasks"/>
         </div>
     </div>
-    <settings v-if="this.settings"/>
+    <settings v-if="this.settings"
+    @notificationToggle="toggleNotificationSetting"
+    />
 </template>
 
 <script>
@@ -38,8 +40,10 @@ import FinishedTasks from "./components/TaskPage/finished_tasks.vue";
 import UnfinishedTasks from "./components/TaskPage/unfinished_tasks.vue";
 import AllTasks from "./components/TaskPage/all_tasks.vue";
 import settings from './components/settings/settings.vue';
+import { sendNotification } from "./main";
 
 export default {
+    emits: ['addTask', 'updateGoalDate', 'deleteTask', 'toggleTaskStatus'],
     components: {
         newT: NewTask,
         finishedTasks: FinishedTasks,
@@ -56,11 +60,22 @@ export default {
                 unfinished: true,
             },
             settings: false,
-            Tasklist: true
+            Tasklist: true,
+            notificationSetting: false,
+            intervalId: null 
         };
+    },
+    created(){
+        this.startChecking();
+    },  
+    watch: {
+        notificationSetting(newVal) {
+            localStorage.setItem('notificationSetting', newVal); // Speichern des neuen Werts
+        }
     },
     mounted() {
         const vis = localStorage.getItem("visibility");
+        window.vueInstance = this;
 
         if (vis){
             this.visibility = JSON.parse(vis);
@@ -82,6 +97,10 @@ export default {
                 console.log("Keine Tasks im LocalStorage gefunden.");
             }
         });
+
+        if(!localStorage.getItem("notificationSetting")){
+            localStorage.setItem("notificationSetting", false);
+        }
     },
     methods: {
         FinOrUnfinTaskToggle(){
@@ -292,7 +311,70 @@ export default {
             } catch (error) {
                 console.error('Fehler:', error);
             }
-        }
+        },
+        toggleNotificationSetting(){
+            console.log("Notification Toggle Changed")
+            this.notificationSetting = !this.notificationSetting;
+            localStorage.setItem("notificationSetting", this.notificationSetting);
+        },
+        startChecking() {
+            // Wenn bereits ein Intervall existiert, stoppe es nicht, da es dauerhaft laufen soll
+            if (this.intervalId) {
+                clearInterval(this.intervalId);
+            }
+
+            // Starte ein neues Intervall, um jede Minute zu prüfen
+            this.intervalId = setInterval(() => {
+                this.checkDates();
+            }, 60000); // Alle 60.000 Millisekunden (1 Minute)
+        },
+        checkDates() {
+            console.log('checkDates Methode aufgerufen');
+            const now = new Date();
+            console.log('Aktuelles Datum und Uhrzeit:', now);
+
+            const taskliste = this.tasks.nichterledigt();
+
+            this.tasks.forEach(task => {
+                if (task.Goal_Date) {
+                    // Zerlege das Datum und die Zeit
+                    const [datePart, timePart] = task.Goal_Date.split(', ').map(part => part.trim());
+                    console.log('Datumsteil:', datePart);
+                    
+                    // Bereinige den Zeitteil
+                    const cleanedTimePart = timePart.replace(/[^0-9:]/g, '');
+                    console.log('Gesäuberter Zeitteil:', cleanedTimePart);
+
+                    // Teile das Datum und die Zeit in Einzelkomponenten auf
+                    const [day, month, year] = datePart.split('.').map(Number);
+                    const [hours, minutes] = cleanedTimePart.split(':').map(Number);
+
+                    console.log('Tag:', day);
+                    console.log('Monat:', month);
+                    console.log('Jahr:', year);
+                    console.log('Stunden:', hours);
+                    console.log('Minuten:', minutes);
+
+                    // Überprüfe auf ungültige Werte
+                    if (isNaN(day) || isNaN(month) || isNaN(year) || isNaN(hours) || isNaN(minutes)) {
+                        console.error('Einer der Datumsteile ist ungültig.');
+                        return;
+                    }
+
+                    // Erstelle das Ziel-Datum
+                    const goalDate = new Date(year, month - 1, day, hours, minutes);
+                    console.log('Berechnetes Ziel-Datum:', goalDate);
+
+                    // Überprüfe, ob das Datum gültig ist und vergleiche es mit dem aktuellen Datum
+                    if (isNaN(goalDate.getTime())) {
+                        console.error('Das berechnete Ziel-Datum ist ungültig.');
+                    } else if (now >= goalDate) {
+                        console.log(`Ziel-Datum für Aufgabe ${task.id} erreicht oder überschritten`);
+                        sendNotification("Dein ToDo ist fällig!", "Folgendes ToDo ist fällig:  \n" + task.beschreibung)
+                    }
+                }
+            });
+        },
     },
     computed: {
         nichterledigt() {
@@ -300,6 +382,12 @@ export default {
         },
         erledigt() {
             return this.tasks.filter(task => task.fertig);
+        }
+    },
+    beforeDestroy() {
+        // Stoppe das Intervall, wenn die Komponente zerstört wird, um Speicherlecks zu vermeiden
+        if (this.intervalId) {
+        clearInterval(this.intervalId);
         }
     }
 };

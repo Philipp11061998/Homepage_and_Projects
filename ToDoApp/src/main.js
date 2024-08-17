@@ -134,3 +134,12 @@ export function emptyLocalStorage(){
     localStorage.removeItem('username', '');
     localStorage.removeItem('visibility', '');
 }
+
+export function sendNotification(title, body) {
+    if (Notification.permission === 'granted') {
+        new Notification(title, {
+        body: body,
+        icon: '../favicon.png' // Füge ein Icon hinzu, wenn gewünscht
+        });
+    }
+}

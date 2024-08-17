@@ -11,6 +11,7 @@
                         <div class="goalDateFilled" :ref="'date-' + task.id">Erledigen bis: {{ task.Goal_Date }}</div> 
                         <input type="datetime-local" :ref="'datePicker-' + task.id" 
                         @change="updateGoalDate(task.id, $event)" style="display: none;">
+                        
                     </div>
                     <div v-else>
                         <hr>
@@ -34,6 +35,7 @@
 <script>
 export default {
     props: ['tasks'],
+    emits: ['updateGoalDate', 'deleteTask', 'toggleTaskStatus'],
     methods: {
         loeschen(taskId) {
             this.$emit('delete-task', taskId);
