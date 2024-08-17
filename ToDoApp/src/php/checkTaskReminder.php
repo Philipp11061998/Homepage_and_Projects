@@ -40,7 +40,7 @@ $result = $stmt->get_result();
 
 if ($result->num_rows === 1) {
     // Aufgaben des Benutzers abfragen
-    $sql = "SELECT id, beschreibung, fertig, Goal_Date, remindered FROM tasks WHERE user_id = ?";
+    $sql = "SELECT * FROM tasks WHERE user_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
@@ -48,10 +48,8 @@ if ($result->num_rows === 1) {
 
     $tasks = [];
     while ($row = $result->fetch_assoc()) {
-        // Überprüfe, ob 'remindered' NULL ist und setze es auf false, falls erforderlich
-        if ($row['remindered'] === null) {
-            $row['remindered'] = false;
-        }
+        // Überprüfe, ob 'remindered' NULL ist und setze einen Standardwert, falls erforderlich
+        $row['remindered'] = $row['remindered'] === null ? false : $row['remindered'];
         $tasks[] = $row;
     }
 

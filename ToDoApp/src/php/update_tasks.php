@@ -38,7 +38,7 @@ if (isset($data['user_id']) && isset($data['tasks'])) {
     }
 
     // Bereite das Statement zum Aktualisieren von Aufgaben vor
-    $stmt = $conn->prepare("UPDATE tasks SET beschreibung = ?, fertig = ?, Goal_Date = ? WHERE user_id = ? AND id = ?");
+    $stmt = $conn->prepare("UPDATE tasks SET beschreibung = ?, fertig = ?, Goal_Date = ?, remindered = ? WHERE user_id = ? AND id = ?");
 
     if (!$stmt) {
         echo json_encode(['error' => 'Fehler beim Vorbereiten des Statements: ' . $conn->error]);
@@ -54,6 +54,7 @@ if (isset($data['user_id']) && isset($data['tasks'])) {
                 $beschreibung = $task['beschreibung'];
                 $fertig = (int)$task['fertig']; // Umwandlung in Integer (0 oder 1)
                 $task_id = (int)$task['id'];
+                $remindered = $task['remindered'];
 
                 // Konvertiere das Datum ins Format YYYY-MM-DD
                 $task_Goal_Date = isset($task['Goal_Date']) ? $task['Goal_Date'] : null;
@@ -61,7 +62,7 @@ if (isset($data['user_id']) && isset($data['tasks'])) {
                 // Debug: Protokolliere Werte vor Bindung
                 error_log("Beschreibung: $beschreibung, Fertig: $fertig, Goal_Date: $task_Goal_Date, User_ID: $user_id, Task_ID: $task_id");
 
-                $stmt->bind_param("sissi", $beschreibung, $fertig, $task_Goal_Date, $user_id, $task_id);
+                $stmt->bind_param("sissis", $beschreibung, $fertig, $task_Goal_Date, $remindered, $user_id, $task_id);
 
                 if (!$stmt->execute()) {
                     echo json_encode(['error' => 'Fehler beim Ausführen des Statements: ' . $stmt->error]);
