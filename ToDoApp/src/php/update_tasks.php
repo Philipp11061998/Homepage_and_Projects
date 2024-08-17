@@ -61,13 +61,7 @@ if (isset($data['user_id']) && isset($data['tasks'])) {
                 // Debug: Protokolliere Werte vor Bindung
                 error_log("Beschreibung: $beschreibung, Fertig: $fertig, Goal_Date: $task_Goal_Date, User_ID: $user_id, Task_ID: $task_id");
 
-                if ($task_Goal_Date) {
-                    // Goal_Date ist gesetzt
-                    $stmt->bind_param("siisi", $beschreibung, $fertig, $user_id, $task_id, $task_Goal_Date);
-                } else {
-                    // Goal_Date ist nicht gesetzt
-                    $stmt->bind_param("siii", $beschreibung, $fertig, $user_id, $task_id);
-                }
+                $stmt->bind_param("siisi", $beschreibung, $fertig, $task_Goal_Date, $user_id, $task_id);
 
                 if (!$stmt->execute()) {
                     echo json_encode(['error' => 'Fehler beim Ausführen des Statements: ' . $stmt->error]);

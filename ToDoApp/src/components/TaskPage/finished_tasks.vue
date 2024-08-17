@@ -39,6 +39,20 @@ export default {
         },
         erledigtWechseln(taskId) {
             this.$emit('toggle-task-status', taskId);
+        },updateGoalDate(taskId, event) {
+            const dateValue = event.target.value;
+
+            // Datum konvertieren
+            const formattedDate = this.convertDate(dateValue);
+
+            // Event auslösen und ein Objekt übergeben
+            this.$emit('update-goal-date', { taskId, goalDate: formattedDate });
+            },
+        convertDate(dateString) {
+            // Datum im Format YYYY-MM-DD parsen
+            const [year, month, day] = dateString.split('-');
+            // Datum im Format DD.MM.YYYY formatieren
+            return `${day}.${month}.${year}`;
         }
     }
 };

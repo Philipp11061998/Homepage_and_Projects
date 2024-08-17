@@ -22,6 +22,7 @@
             <finished-tasks :tasks="erledigt" 
             @delete-task="handleDeleteTask" 
             @toggle-task-status="handleToggleTaskStatus"
+            @update-goal-date="ChangeGoalDate"
             />
             <hr>
             <h2 @mousedown.prevent @click="toggleTasks('all')">Alle Aufgaben ({{ tasks.length }})</h2>
