@@ -56,12 +56,12 @@ if (isset($data['user_id']) && isset($data['tasks'])) {
                 $task_id = (int)$task['id'];
 
                 // Konvertiere das Datum ins Format YYYY-MM-DD
-                $task_Goal_Date = isset($task['Goal_Date']) ? date('Y-m-d', strtotime(str_replace('.', '-', $task['Goal_Date']))) : null;
+                $task_Goal_Date = isset($task['Goal_Date']) ? $task['Goal_Date'] : null;
 
                 // Debug: Protokolliere Werte vor Bindung
                 error_log("Beschreibung: $beschreibung, Fertig: $fertig, Goal_Date: $task_Goal_Date, User_ID: $user_id, Task_ID: $task_id");
 
-                $stmt->bind_param("siisi", $beschreibung, $fertig, $task_Goal_Date, $user_id, $task_id);
+                $stmt->bind_param("sissi", $beschreibung, $fertig, $task_Goal_Date, $user_id, $task_id);
 
                 if (!$stmt->execute()) {
                     echo json_encode(['error' => 'Fehler beim Ausführen des Statements: ' . $stmt->error]);
