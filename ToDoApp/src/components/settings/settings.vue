@@ -12,10 +12,10 @@
         </div>
         <hr>
         <div class="rightRow">
-            <div v-if="visibilitys.general" class="rightRowitem">
+            <div v-if="this.visibilitys.general" class="rightRowitem">
                 Hier werden Allgemeine Einstellungen entstehen. Aktuell gibt es noch keine Auswahlmöglichkeiten.
             </div>
-            <div v-if="visibilitys.notifications" class="rightRowitem">
+            <div v-if="this.visibilitys.notifications" class="rightRowitem">
                 <div id="switch">
                     Aktiviert 
                     <label class="switch">
@@ -23,6 +23,9 @@
                         <span class="slider round"></span>
                     </label> 
                     Deaktiviert
+                </div>
+                <div v-if="this.notifications">
+                    Die Benachrichtigungen sind aktiviert. Wir erinnern dich sobald eins deiner ToDos fällig wird. Sobald wir dich einmal erinnert haben, erinnern wir dich erst nach einer Stunde wieder, solange du das ToDo nicht auf erledigt setzt.
                 </div>
             </div>
         </div>
@@ -38,18 +41,19 @@ export default {
     data() {
         return {
             visibilitys: {
-              general: true,
-              notifications: false  
-            }
+                general: true,
+                notifications: false
+            },
+            notifications: false
         };
     },
     mounted(){
         this.$nextTick(() => {
-        const notifVis = JSON.parse(localStorage.getItem("notificationSetting"));
-        if (notifVis !== null) {
-            this.visibilitys.notifications = notifVis;
-        }
-    });
+            const notifVis = localStorage.getItem("notificationSetting");
+            if (notifVis !== null) {
+                this.notifications = notifVis;
+            }
+        });
     },
     methods: {
         setVisibility(section) {
@@ -70,10 +74,15 @@ export default {
             if (permission === 'granted') {
                 this.notifications = !this.notifications;
                 localStorage.setItem("notificationSetting", JSON.stringify(this.notifications));
-                
+
+                if(!this.notifications){
+                    this.$emit("IntervallRemove");
+                }
+
                 console.log("Benachrichtigungen", this.notifications ? "aktiviert" : "deaktiviert");
                 if (this.notifications) {
                     sendNotification('Benachrichtigungen aktiviert', 'Wir benachrichtigen dich sobald eines der ToDos, die ein Ziel haben, fällig sind.');
+                    this.$emit("startTimerForNotifications");
                 }
             } else if (permission === "denied") {
                 console.log('Benachrichtigungen wurden nicht aktiviert.');

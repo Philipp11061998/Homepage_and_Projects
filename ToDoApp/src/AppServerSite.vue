@@ -7,22 +7,22 @@
         <label id="new">
             <span @mousedown.prevent>Neue Aufgabe hinzufügen:</span>
             <newT 
-            @add-task="handleAddTask"
+                @add-task="handleAddTask"
             />
         </label>
         <div id="holder_tasks">
             <h2 @mousedown.prevent @click="toggleTasks('unfinished')">Nicht erledigte Aufgaben ({{ nichterledigt.length }})</h2>
             <unfinished-tasks :tasks="nichterledigt" 
-            @delete-task="handleDeleteTask" 
-            @toggle-task-status="handleToggleTaskStatus"
-            @update-goal-date="ChangeGoalDate"
+                @delete-task="handleDeleteTask" 
+                @toggle-task-status="handleToggleTaskStatus"
+                @update-goal-date="ChangeGoalDate"
             />
             <hr>
             <h2 @mousedown.prevent @click="toggleTasks('finished')">Erledigte Aufgaben ({{ erledigt.length }})</h2>
             <finished-tasks :tasks="erledigt" 
-            @delete-task="handleDeleteTask" 
-            @toggle-task-status="handleToggleTaskStatus"
-            @update-goal-date="ChangeGoalDate"
+                @delete-task="handleDeleteTask" 
+                @toggle-task-status="handleToggleTaskStatus"
+                @update-goal-date="ChangeGoalDate"
             />
             <hr>
             <h2 @mousedown.prevent @click="toggleTasks('all')">Alle Aufgaben ({{ tasks.length }})</h2>
@@ -30,7 +30,9 @@
         </div>
     </div>
     <settings v-if="this.settings"
-    @notificationToggle="toggleNotificationSetting"
+        @notificationToggle="toggleNotificationSetting"
+        @IntervallRemove="clearIntervall"
+        @startTimerForNotifications="startChecking"
     />
 </template>
 
@@ -325,8 +327,13 @@ export default {
 
             // Starte ein neues Intervall, um jede Minute zu prüfen
             this.intervalId = setInterval(() => {
-                this.checkDates();
-            }, 1800000); // Alle 60.000 Millisekunden (1 Minute)
+                if (localStorage.getItem("notificationSetting")){
+                    this.checkDates();
+                } else {
+                    return console.log("Bitte aktiviere Benachrichtigungen in den Einstellungen, damit wir dich benachrichtigen können, falls deine ToDos fällig werden.")
+                }
+                
+            }, 10000); // Alle 60.000 Millisekunden (1 Minute)
         },
         async checkDates() {
             console.log('checkDates Methode aufgerufen');
@@ -350,8 +357,6 @@ export default {
                     console.error('Fehler beim Parsen der JSON-Antwort:', error);
                     return;
                 }
-
-                console.log(data);
 
                 data.forEach(task => {
                     if (task.Goal_Date) {
@@ -442,6 +447,9 @@ export default {
                 console.error('Fehler bei der Anfrage:', error);
             }
         },
+        clearIntervall(){
+            clearInterval(this.intervalId);
+        }
     },
     computed: {
         nichterledigt() {
@@ -454,7 +462,7 @@ export default {
     beforeDestroy() {
         // Stoppe das Intervall, wenn die Komponente zerstört wird, um Speicherlecks zu vermeiden
         if (this.intervalId) {
-        clearInterval(this.intervalId);
+            clearInterval(this.intervalId);
         }
     }
 };
