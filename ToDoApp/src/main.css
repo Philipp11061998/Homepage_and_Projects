@@ -67,6 +67,20 @@ nav{
     pointer-events: none;
 }
 
+#date{
+    margin-top: 1rem;
+    margin-bottom: .5rem;
+    font-size: .9rem;
+    opacity: .7;
+}
+
+.dateFilled{
+    margin-top: .5rem;
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
 @media only screen and (max-width: 530px) {
     body{
         font-size: 1rem;
