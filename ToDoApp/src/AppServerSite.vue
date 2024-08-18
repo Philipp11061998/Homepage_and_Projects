@@ -103,6 +103,9 @@ export default {
                 console.log("Keine Tasks im LocalStorage gefunden.");
             }
         });
+
+        const username = localStorage.getItem("username");
+        document.title = `${username}s ToDo Liste`
     },
     methods: {
         FinOrUnfinTaskToggle(){

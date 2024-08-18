@@ -64,6 +64,8 @@ export default {
                document.getElementById("unfinished").style.display = "block";
             }
         }
+
+        document.title = `Lokale ToDo Liste`
     },
     methods: {
         handleAddTask(task) {

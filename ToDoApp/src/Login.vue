@@ -83,6 +83,8 @@ export default {
                 window.dispatchEvent(server);
             });
         }
+
+        document.title = `Login :)`
     }
 };
 
