@@ -37,23 +37,44 @@ if (isset($data['username']) && isset($data['password'])) {
         exit();
     }
 
-    // Bereite das Statement zum Einfügen des neuen Benutzers vor
-    $stmt = $conn->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)");
-    $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+    $conn->begin_transaction(); // Beginne eine Transaktion
 
-    if (!$stmt) {
-        echo json_encode(['error' => 'Fehler beim Vorbereiten des Statements: ' . $conn->error]);
-        exit();
-    }
+    try {
+        // Bereite das Statement zum Einfügen des neuen Benutzers vor
+        $stmt = $conn->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)");
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-    $stmt->bind_param("ss", $username, $hashedPassword);
+        if (!$stmt) {
+            throw new Exception('Fehler beim Vorbereiten des Statements: ' . $conn->error);
+        }
 
-    if ($stmt->execute()) {
-        // Registrierung erfolgreich, Session starten
-        $_SESSION['user_id'] = $conn->insert_id;
-        $_SESSION['username'] = $username;
+        $stmt->bind_param("ss", $username, $hashedPassword);
 
-        // Setze den Session-Cookie mit SameSite=None
+        if (!$stmt->execute()) {
+            throw new Exception('Fehler beim Einfügen des Benutzers: ' . $stmt->error);
+        }
+
+        // Benutzer-ID aus der eingefügten Zeile holen
+        $user_id = $conn->insert_id;
+
+        // Bereite das Statement zum Einfügen der Benutzereinstellungen vor
+        $stmt_settings = $conn->prepare("INSERT INTO user_settings (user_id, notifications, intervalLength) VALUES (?, ?, ?)");
+        $notifications = 0;
+        $intervalLength = 3600000; // Millisekunden
+
+        if (!$stmt_settings) {
+            throw new Exception('Fehler beim Vorbereiten des Statements für Benutzereinstellungen: ' . $conn->error);
+        }
+
+        $stmt_settings->bind_param("iii", $user_id, $notifications, $intervalLength);
+
+        if (!$stmt_settings->execute()) {
+            throw new Exception('Fehler beim Einfügen der Benutzereinstellungen: ' . $stmt_settings->error);
+        }
+
+        $conn->commit(); // Bestätige die Transaktion
+
+        // Session-Cookie setzen
         setcookie(session_name(), session_id(), [
             'expires' => time() + (14 * 24 * 60 * 60), // Lebensdauer des Cookies
             'path' => '/', // Pfad für das Cookie
@@ -65,13 +86,16 @@ if (isset($data['username']) && isset($data['password'])) {
         
         // Rückgabe von Erfolg und user_id
         echo json_encode([
-            'user_id' => $_SESSION['user_id'] // Rückgabe der user_id aus der Session
+            'user_id' => $user_id // Rückgabe der user_id
         ]);
-    } else {
-        echo json_encode(['error' => 'Fehler beim Einfügen des Benutzers: ' . $stmt->error]);
+
+        $stmt->close();
+        $stmt_settings->close();
+    } catch (Exception $e) {
+        $conn->rollback(); // Rolle die Transaktion zurück im Fehlerfall
+        echo json_encode(['error' => $e->getMessage()]);
     }
 
-    $stmt->close();
     $conn->close();
 } else {
     echo json_encode(['error' => 'Ungültige Eingabedaten']);

@@ -133,6 +133,7 @@ export function emptyLocalStorage(){
     localStorage.removeItem('user_id', '');
     localStorage.removeItem('username', '');
     localStorage.removeItem('visibility', '');
+    localStorage.removeItem('notificationSetting', '');
 }
 
 export function sendNotification(title, body) {

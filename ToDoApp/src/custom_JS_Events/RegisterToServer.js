@@ -50,7 +50,6 @@ export async function handleRegister(username, password) {
             console.log('Registrierung erfolgreich. User ID:', data.user_id);
             localStorage.setItem('user_id', data.user_id); // Speichern der user_id
             localStorage.setItem("username", username);
-            emptyLocalStorage();
             document.getElementById("login").style.display = "none";
             app2.mount('#app');
             app2.provide('loginData', { username, password });

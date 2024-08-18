@@ -2,6 +2,7 @@ import { createApp } from 'vue';
 import { emptyLocalStorage, startTasksApp, pullTasksFromDatatable } from '@/main';
 import Login from '@/Login.vue';
 import SecondApp from '../AppServerSite.vue';
+import { getSettings } from './getSettings.js';
 
 const createLoginApp = () => createApp(Login);
 let loginApp = createLoginApp();
@@ -42,6 +43,7 @@ export function autoLoginServer(){
             document.getElementById('holder').style.display = "block"; // Einblenden eines bestimmten Elements
             startTasksApp(); // Starten einer anderen Funktion oder Anwendungsteil
             document.getElementById("FirstHeader").innerHTML = headerToDos + username.replace(/^"(.+(?="$))"$/, '$1');
+            getSettings();
             pullTasksFromDatatable(username);
         } else {
             console.error('Session ist nicht gültig:', data.error);

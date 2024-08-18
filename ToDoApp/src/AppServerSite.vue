@@ -29,10 +29,13 @@
             <all-tasks :tasks="tasks"/>
         </div>
     </div>
-    <settings v-if="this.settings"
+    <settings :intervalLength v-if="this.settings"
         @notificationToggle="toggleNotificationSetting"
         @IntervallRemove="clearIntervall"
         @startTimerForNotifications="startChecking"
+        @intervalChange="UserSetInterval"
+        @changedNotificationSettings="NotifSetinLocStor"
+        @changedSettings="updateUserSettings"
     />
 </template>
 
@@ -64,7 +67,8 @@ export default {
             settings: false,
             Tasklist: true,
             notificationSetting: false,
-            intervalId: null 
+            intervalId: null,
+            intervalLength: 3600000
         };
     },
     created(){
@@ -99,10 +103,6 @@ export default {
                 console.log("Keine Tasks im LocalStorage gefunden.");
             }
         });
-
-        if(!localStorage.getItem("notificationSetting")){
-            localStorage.setItem("notificationSetting", false);
-        }
     },
     methods: {
         FinOrUnfinTaskToggle(){
@@ -327,128 +327,174 @@ export default {
 
             // Starte ein neues Intervall, um jede Minute zu prüfen
             this.intervalId = setInterval(() => {
-                if (localStorage.getItem("notificationSetting")){
-                    this.checkDates();
-                } else {
-                    return console.log("Bitte aktiviere Benachrichtigungen in den Einstellungen, damit wir dich benachrichtigen können, falls deine ToDos fällig werden.")
-                }
-                
-            }, 10000); // Alle 60.000 Millisekunden (1 Minute)
+                this.checkDates(); 
+            }, this.intervalLength);
         },
         async checkDates() {
             console.log('checkDates Methode aufgerufen');
-            const now = new Date();
-            const userId = localStorage.getItem('user_id');
-            const username = localStorage.getItem('username');
+            const ErlaubNotif = localStorage.getItem("notificationSetting");
+            
+            if(ErlaubNotif){
+                const now = new Date();
+                const userId = localStorage.getItem('user_id');
+                const username = localStorage.getItem('username');
 
-            try {
-                const response = await fetch(`https://philippk.name/ToDoApp/checkTaskReminder.php?user_id=${userId}&username=${encodeURIComponent(username)}`, {
-                    method: 'GET'
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP-Fehler! Status: ${response.status}`);
-                }
-
-                let data = {};
                 try {
-                    data = await response.json();
-                } catch (error) {
-                    console.error('Fehler beim Parsen der JSON-Antwort:', error);
-                    return;
-                }
+                    const response = await fetch(`https://philippk.name/ToDoApp/checkTaskReminder.php?user_id=${userId}&username=${encodeURIComponent(username)}`, {
+                        method: 'GET'
+                    });
 
-                data.forEach(task => {
-                    if (task.Goal_Date) {
-                        // Zerlege das Datum und die Zeit
-                        const [datePart, timePart] = task.Goal_Date.split(', ').map(part => part.trim());
-
-                        // Bereinige den Zeitteil
-                        const cleanedTimePart = timePart.replace(/[^0-9:]/g, '');
-
-                        // Teile das Datum und die Zeit in Einzelkomponenten auf
-                        const [day, month, year] = datePart.split('.').map(Number);
-                        const [hours, minutes] = cleanedTimePart.split(':').map(Number);
-
-                        let reminderDate = "";
-
-                        if (task.remindered) {
-                            if (typeof task.remindered === 'string') {
-                                let [reminderDatePart, reminderTimePart] = task.remindered.split(', ').map(part => part.trim());
-
-                                // Bereinige den Zeitteil
-                                let cleanedReminderTimePart = reminderTimePart.replace(/[^0-9:]/g, '');
-
-                                // Teile das Datum und die Zeit in Einzelkomponenten auf
-                                let [reminderDay, reminderMonth, reminderYear] = reminderDatePart.split('.').map(Number);
-                                let [reminderHours, reminderMinutes] = cleanedReminderTimePart.split(':').map(Number);
-
-                                reminderDate = new Date(reminderYear, reminderMonth - 1, reminderDay, reminderHours, reminderMinutes);
-                                
-                                // Füge hier zusätzliche Logik hinzu, falls erforderlich
-                            } else {
-                                console.log('Die Erinnerung ist bereits gesetzt, aber kein gültiger Wert wurde gefunden.');
-                            }
-                        }
-
-                        // Überprüfe auf ungültige Werte
-                        if (isNaN(day) || isNaN(month) || isNaN(year) || isNaN(hours) || isNaN(minutes)) {
-                            console.error('Einer der Datumsteile ist ungültig.');
-                            return;
-                        }
-
-                        // Erstelle das Ziel-Datum
-                        const goalDate = new Date(year, month - 1, day, hours, minutes);
-
-                        const oneHour = 3600000; // Eine Stunde in Millisekunden
-
-                        // Überprüfe, ob das Datum gültig ist und vergleiche es mit dem aktuellen Datum
-                        if (isNaN(goalDate.getTime())) {
-                            console.error('Das berechnete Ziel-Datum ist ungültig.');
-                        } else if (now >= goalDate) {
-                            console.log(`Ziel-Datum für Aufgabe ${task.id} erreicht oder überschritten`);
-
-                            if(task.remindered === false){
-                                sendNotification("Dein ToDo ist fällig! \n", "Folgendes ToDo ist fällig:  \n\n" + task.beschreibung);
-                                const taskToUpdate = this.tasks.find(t => t.id === task.id);
-
-                                const day = String(now.getDate()).padStart(2, '0');
-                                const month = String(now.getMonth() + 1).padStart(2, '0'); // Monate beginnen bei 0
-                                const year = now.getFullYear();
-                                const hours = String(now.getHours()).padStart(2, '0');
-                                const minutes = String(now.getMinutes()).padStart(2, '0');
-
-                                const formattedDate = `${day}.${month}.${year}, ${hours}:${minutes} Uhr`;
-
-                                taskToUpdate.remindered = formattedDate;
-                                this.handleUpdateTask(taskToUpdate);
-                            }else if (task.reminderd === true){
-                                return console.log(`Die Aufgabe mit der ID ${task.id} ist in der Datenbank als erledigt markiert.`)
-                            } else if (now - reminderDate >= oneHour) {
-                                const minutesS = Math.floor((now - reminderDate) / (1000 * 60)); 
-                                sendNotification(`Dein ToDo ist fällig! \n`, `Folgendes ToDo ist seit ${minutesS} Minuten fällig:  \n\n` + task.beschreibung);
-                                const taskToUpdate = this.tasks.find(t => t.id === task.id);
-
-                                const day = String(now.getDate()).padStart(2, '0');
-                                const month = String(now.getMonth() + 1).padStart(2, '0'); // Monate beginnen bei 0
-                                const year = now.getFullYear();
-                                const hours = String(now.getHours()).padStart(2, '0');
-                                const minutes = String(now.getMinutes()).padStart(2, '0');
-
-                                const formattedDate = `${day}.${month}.${year}, ${hours}:${minutes} Uhr`;
-
-                                taskToUpdate.remindered = formattedDate;
-                                this.handleUpdateTask(taskToUpdate);
-                            }
-                        }
+                    if (!response.ok) {
+                        throw new Error(`HTTP-Fehler! Status: ${response.status}`);
                     }
-                });
-            } catch (error) {
-                console.error('Fehler bei der Anfrage:', error);
-            }
+
+                    let data = {};
+                    try {
+                        data = await response.json();
+                    } catch (error) {
+                        console.error('Fehler beim Parsen der JSON-Antwort:', error);
+                        return;
+                    }
+
+                    data.forEach(task => {
+                        if (task.Goal_Date) {
+                            // Zerlege das Datum und die Zeit
+                            const [datePart, timePart] = task.Goal_Date.split(', ').map(part => part.trim());
+
+                            // Bereinige den Zeitteil
+                            const cleanedTimePart = timePart.replace(/[^0-9:]/g, '');
+
+                            // Teile das Datum und die Zeit in Einzelkomponenten auf
+                            const [day, month, year] = datePart.split('.').map(Number);
+                            const [hours, minutes] = cleanedTimePart.split(':').map(Number);
+
+                            let reminderDate = "";
+
+                            if (task.remindered) {
+                                if (typeof task.remindered === 'string') {
+                                    let [reminderDatePart, reminderTimePart] = task.remindered.split(', ').map(part => part.trim());
+
+                                    // Bereinige den Zeitteil
+                                    let cleanedReminderTimePart = reminderTimePart.replace(/[^0-9:]/g, '');
+
+                                    // Teile das Datum und die Zeit in Einzelkomponenten auf
+                                    let [reminderDay, reminderMonth, reminderYear] = reminderDatePart.split('.').map(Number);
+                                    let [reminderHours, reminderMinutes] = cleanedReminderTimePart.split(':').map(Number);
+
+                                    reminderDate = new Date(reminderYear, reminderMonth - 1, reminderDay, reminderHours, reminderMinutes);
+                                    
+                                    // Füge hier zusätzliche Logik hinzu, falls erforderlich
+                                } else {
+                                    console.log('Die Erinnerung ist bereits gesetzt, aber kein gültiger Wert wurde gefunden.');
+                                }
+                            }
+
+                            // Überprüfe auf ungültige Werte
+                            if (isNaN(day) || isNaN(month) || isNaN(year) || isNaN(hours) || isNaN(minutes)) {
+                                console.error('Einer der Datumsteile ist ungültig.');
+                                return;
+                            }
+
+                            // Erstelle das Ziel-Datum
+                            const goalDate = new Date(year, month - 1, day, hours, minutes);
+
+                            const oneHour = 3600000; // Eine Stunde in Millisekunden
+
+                            // Überprüfe, ob das Datum gültig ist und vergleiche es mit dem aktuellen Datum
+                            if (isNaN(goalDate.getTime())) {
+                                console.error('Das berechnete Ziel-Datum ist ungültig.');
+                            } else if (now >= goalDate) {
+                                console.log(`Ziel-Datum für Aufgabe ${task.id} erreicht oder überschritten`);
+
+                                if(task.remindered === false){
+                                    sendNotification("Dein ToDo ist fällig! \n", "Folgendes ToDo ist fällig:  \n\n" + task.beschreibung);
+                                    const taskToUpdate = this.tasks.find(t => t.id === task.id);
+
+                                    const day = String(now.getDate()).padStart(2, '0');
+                                    const month = String(now.getMonth() + 1).padStart(2, '0'); // Monate beginnen bei 0
+                                    const year = now.getFullYear();
+                                    const hours = String(now.getHours()).padStart(2, '0');
+                                    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+                                    const formattedDate = `${day}.${month}.${year}, ${hours}:${minutes} Uhr`;
+
+                                    taskToUpdate.remindered = formattedDate;
+                                    this.handleUpdateTask(taskToUpdate);
+                                }else if (task.reminderd === true){
+                                    return console.log(`Die Aufgabe mit der ID ${task.id} ist in der Datenbank als erledigt markiert.`)
+                                } else if (now - reminderDate >= oneHour) {
+                                    const minutesS = Math.floor((now - reminderDate) / (1000 * 60)); 
+                                    sendNotification(`Dein ToDo ist fällig! \n`, `Folgendes ToDo ist seit ${minutesS} Minuten fällig:  \n\n` + task.beschreibung);
+                                    const taskToUpdate = this.tasks.find(t => t.id === task.id);
+
+                                    const day = String(now.getDate()).padStart(2, '0');
+                                    const month = String(now.getMonth() + 1).padStart(2, '0'); // Monate beginnen bei 0
+                                    const year = now.getFullYear();
+                                    const hours = String(now.getHours()).padStart(2, '0');
+                                    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+                                    const formattedDate = `${day}.${month}.${year}, ${hours}:${minutes} Uhr`;
+
+                                    taskToUpdate.remindered = formattedDate;
+                                    this.handleUpdateTask(taskToUpdate);
+                                }
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Fehler bei der Anfrage:', error);
+                }
+            } else {
+                console.log("Der User hat keine Benachrichtigungserlaubnis erteilt.")
+                this.clearIntervall(this.intervalId);
+            }     
         },
         clearIntervall(){
             clearInterval(this.intervalId);
+            this.updateUserSettings();
+        },
+        UserSetInterval(length){
+            this.intervalLength = length;
+            console.log("Neue IntervallLänge: " + length);
+            this.startChecking();
+            this.updateUserSettings();
+        },
+        NotifSetinLocStor(){
+            this.notificationSetting = localStorage.getItem("notificationSetting");
+            this.updateUserSettings();
+        },      	
+        async updateUserSettings() {
+            const url = "https://philippk.name/ToDoApp/setSettings.php";
+
+            const data = {};
+
+            data.notifications = this.notificationSetting;
+            data.intervalLength = this.intervalLength;
+
+            const user_id = localStorage.getItem("user_id");
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: user_id,
+                        ...data
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    console.log('Einstellungen erfolgreich aktualisiert');
+                } else {
+                    console.error('Fehler beim Aktualisieren der Einstellungen:', result.error);
+                }
+            } catch (error) {
+                console.error('Netzwerkfehler:', error);
+            }
         }
     },
     computed: {

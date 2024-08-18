@@ -3,70 +3,87 @@
         <div class="leftRow">
             <button @click="setVisibility('general')" :class="{ active: visibilitys.general }">
                 Allgemeine Einstellungen
-                <hr id="betweenSettings">
+                <hr class="betweenSettings">
             </button>
             <button @click="setVisibility('notifications')" :class="{ active: visibilitys.notifications }">
                 Benachrichtigungen
-                <hr id="betweenSettings">
+                <hr class="betweenSettings">
             </button>
         </div>
         <hr>
         <div class="rightRow">
-            <div v-if="this.visibilitys.general" class="rightRowitem">
+            <div v-if="visibilitys.general" class="rightRowitem">
                 Hier werden Allgemeine Einstellungen entstehen. Aktuell gibt es noch keine Auswahlmöglichkeiten.
             </div>
-            <div v-if="this.visibilitys.notifications" class="rightRowitem">
+            <div v-if="visibilitys.notifications" class="rightRowitem">
                 <div id="switch">
-                    Aktiviert 
+                    Deaktiviert 
                     <label class="switch">
-                        <input type="checkbox" :checked="!notifications" @change="toggleNotification">
+                        <input type="checkbox" :checked="notifications" @change="toggleNotification">
                         <span class="slider round"></span>
                     </label> 
-                    Deaktiviert
+                    Aktiviert
                 </div>
-                <div v-if="this.notifications">
-                    Die Benachrichtigungen sind aktiviert. Wir erinnern dich sobald eins deiner ToDos fällig wird. Sobald wir dich einmal erinnert haben, erinnern wir dich erst nach einer Stunde wieder, solange du das ToDo nicht auf erledigt setzt.
+                <div v-if="notifications">
+                    Die Benachrichtigungen sind aktiviert. Wir erinnern dich sobald eins deiner ToDos fällig wird. Sobald wir dich einmal erinnert haben, erinnern wir dich erst nach {{ length }} Minuten wieder, solange du das ToDo nicht auf erledigt setzt.
+                </div>
+                <br>
+                <hr class="betweenSettings" v-if="notifications">
+                <br>
+                <div v-if="notifications">
+                    <input type="number" ref="minutePicker" @change="changeIntervalLength" style="display: none;">
+                    <span id="UserSetMin" ref="minutePickerText" @click="makeMinInputVisible">
+                    Ändere <span class="PseudoLink">hier</span> die Zeitspanne zwischen den Benachrichtigungen.
+                    </span>
                 </div>
             </div>
         </div>
     </ul>
 </template>
 
-
 <script>
-
 import { sendNotification } from '../../main.js';
 
 export default {
+    props: ['intervalLength'],
     data() {
         return {
             visibilitys: {
                 general: true,
                 notifications: false
             },
-            notifications: false
+            notifications: false,
+            length: this.calculateMinutes(this.intervalLength)
         };
     },
     mounted(){
         this.$nextTick(() => {
-            const notifVis = localStorage.getItem("notificationSetting");
+            const notifVis = JSON.parse(localStorage.getItem("notificationSetting"));
             if (notifVis !== null) {
                 this.notifications = notifVis;
             }
+
+            const intLeng = localStorage.getItem("intervalLength");
+
+            this.length = intLeng;
         });
+    },
+    watch: {
+        intervalLength(newVal) {
+            this.length = this.calculateMinutes(newVal);
+        }
     },
     methods: {
         setVisibility(section) {
             // Alle Einträge in visibilitys auf false setzen
-            for (let key in this.visibilitys) {
-                if (this.visibilitys.hasOwnProperty(key)) {
-                    this.visibilitys[key] = false;
-                }
-            }
+            Object.keys(this.visibilitys).forEach(key => {
+                this.visibilitys[key] = false;
+            });
             // Das spezifische Feld auf true setzen
-            if (this.visibilitys.hasOwnProperty(section)) {
-                this.visibilitys[section] = true;
-            }
+            this.visibilitys[section] = true;
+        },
+        calculateMinutes(milliseconds) {
+            return milliseconds / 60000; // Millisekunden in Minuten umwandeln
         },
         async toggleNotification() {
             const permission = await Notification.requestPermission();
@@ -83,12 +100,32 @@ export default {
                 if (this.notifications) {
                     sendNotification('Benachrichtigungen aktiviert', 'Wir benachrichtigen dich sobald eines der ToDos, die ein Ziel haben, fällig sind.');
                     this.$emit("startTimerForNotifications");
+                    this.$emit("changedNotificationSettings");
                 }
             } else if (permission === "denied") {
                 console.log('Benachrichtigungen wurden nicht aktiviert.');
             }
         },
-     }
+        makeMinInputVisible() {
+            const minutePickerText = this.$refs.minutePickerText;
+            const minutePicker = this.$refs.minutePicker;
+
+            minutePickerText.style.display = 'none';
+            minutePicker.style.display = 'block';
+        },
+        changeIntervalLength(event){
+            this.length = event.target.value;
+            const newMilliseconds = event.target.value * 60000;
+            this.$emit('intervalChange', newMilliseconds);
+            this.$emit('changedSettings');
+
+            const minutePickerText = this.$refs.minutePickerText;
+            const minutePicker = this.$refs.minutePicker;
+
+            minutePickerText.style.display = 'block';
+            minutePicker.style.display = 'none';
+        }
+    }
 };
 </script>
 
@@ -135,6 +172,15 @@ export default {
         text-align: start;
         display: flex;
         align-items: center;
+        justify-content: center !important;
+    }
+
+    .rightRowitem{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: .4rem;
     }
 
     hr {
@@ -147,7 +193,7 @@ export default {
         transform: rotate(90deg);
     }
     
-    #betweenSettings {
+    .betweenSettings {
         position: relative;
         margin-top: 0.5rem;
         height: 1px;
@@ -199,17 +245,17 @@ export default {
         width: 26px;
         left: 4px;
         bottom: 4px;
-        background-color: white;
+        background-color: #2196F3;
         transition: .4s;
         border-radius: 50%;
     }
 
     input:not(:checked) + .slider {
-        background-color: #2196F3;
+        background-color: #ccc;
     }
 
     input:checked + .slider {
-        background-color: #ccc;
+        background-color: white;
     }
 
     input:checked + .slider:before {
@@ -218,6 +264,11 @@ export default {
 
     input:not(:checked) + .slider:before {
         transform: translateX(0);
+    }
+
+    .PseudoLink{
+        text-decoration: underline;
+        cursor: pointer;
     }
 
 </style>

@@ -2,6 +2,7 @@ import { createApp } from 'vue';
 import { startTasksApp, emptyLocalStorage, pullTasksFromDatatable } from "@/main";
 import SecondApp from '../AppServerSite.vue';
 import Login from '@/Login.vue';
+import { getSettings } from './getSettings.js';
 
 const createLoginApp = () => createApp(Login);
 let loginApp = createLoginApp();
@@ -55,6 +56,7 @@ export function handleLogin(username, password) {
             //LocalStorage funktioniert hat. Das ist notwendig um beim neuladen der Seite
             //Das Server Event richtig auszuführen
             pullTasksFromDatatable(username);
+            getSettings();
             location.reload();
             return true; // Erfolgreicher Login
         } else if (data.error) {
