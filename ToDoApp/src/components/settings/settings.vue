@@ -33,7 +33,7 @@
                 <div v-if="notifications">
                     <input type="number" ref="minutePicker" @change="changeIntervalLength" style="display: none;">
                     <span id="UserSetMin" ref="minutePickerText" @click="makeMinInputVisible">
-                    Ändere <span class="PseudoLink">hier</span> die Zeitspanne zwischen den Benachrichtigungen.
+                    Ändere <span class="PseudoLink">hier</span> die Zeitspanne, wie oft wir prüfen, ob benachrichtigt werden muss.
                     </span>
                 </div>
             </div>
