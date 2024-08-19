@@ -11,8 +11,8 @@
                 <input class="form_input" type="text" name="name" id="name" required>
               </div>
               <div class="form_Row">
-                <label for="mail" class="labelBefor">Email:</label>
-                <input class="form_input" type="text" name="mail" id="mail">                 
+                <label for="mail" class="labelBefor"><span class="required">Email:</span></label>
+                <input class="form_input" type="text" name="mail" id="mail" required>                 
               </div>
               <div class="form_Row">
                 <label for="message" class="labelBefor"><span class="required">Nachricht:</span></label>
