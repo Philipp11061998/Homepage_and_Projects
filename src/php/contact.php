@@ -39,7 +39,22 @@ if (isset($data['name']) && isset($data['email']) && isset($data['message'])) {
     $sql = "INSERT INTO contacts (name, email, message) VALUES ('$name', '$email', '$message')";
 
     if ($conn->query($sql) === TRUE) {
-        echo json_encode(['success' => 'Daten erfolgreich gespeichert']);
+        // E-Mail-Versand
+        $to = 'philipp@philippk.name';
+        $subject = 'Neuer Kontakt: ' . $name;
+        $emailMessage = "Name: $name\n";
+        $emailMessage .= "Email: $email\n";
+        $emailMessage .= "Message: $message\n";
+
+        $headers = "From: $email" . "\r\n" .
+                   "Reply-To: $email" . "\r\n" .
+                   "X-Mailer: PHP/" . phpversion();
+
+        if (mail($to, $subject, $emailMessage, $headers)) {
+            echo json_encode(['success' => 'Daten erfolgreich gespeichert und E-Mail gesendet']);
+        } else {
+            echo json_encode(['error' => 'Daten gespeichert, aber Fehler beim Senden der E-Mail']);
+        }
     } else {
         echo json_encode(['error' => 'Fehler beim Speichern der Daten: ' . $conn->error]);
     }
